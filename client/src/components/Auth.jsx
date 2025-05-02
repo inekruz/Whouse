@@ -17,6 +17,10 @@ const Auth = ({ onClose }) => {
             <label htmlFor="password">Пароль</label>
             <input type="password" id="password" placeholder="Введите пароль" />
           </div>
+          <div className="form-group">
+            <label htmlFor="number">Код-Сотрудника</label>
+            <input type="number" id="code" placeholder="Введите ваш код" />
+          </div>
           <button type="submit" className="auth-submit">
             Войти
           </button>
