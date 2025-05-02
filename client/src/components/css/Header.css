@@ -1,0 +1,50 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .header__logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .header__controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .theme-toggle:hover {
+    background-color: var(--ternary-color);
+  }
+  
+  .auth-button {
+    background-color: var(--button-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .auth-button:hover {
+    background-color: var(--button-hover-color);
+  }
