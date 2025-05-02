@@ -4,6 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const config = require('../config/config');
 const Auth = require('./routes/auth');
+const Admin = require('./routes/admin');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +16,8 @@ app.get('/', (req, res) => {
   res.send('Ну я работаю! 🚀 Что тебе тут нужно ?');
 });
 
-app.use('/api/auth', Auth);
+app.use('/auth', Auth);
+app.use('/adm', Admin);
 
 const startServer = () => {
   server.listen(config.port, () => {
