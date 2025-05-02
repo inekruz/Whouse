@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Notification from './Notification';
+import { showMsg } from './Notification';
 import './css/Auth.css';
 
 const Auth = ({ onClose }) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     try {
       const response = await fetch('https://api.whous.ru/auth/login', {
@@ -29,25 +29,25 @@ const Auth = ({ onClose }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Ошибка авторизации');
+        showMsg('Ошибка авторизации', 'error');
       }
 
       localStorage.setItem('token', data.token);
       onClose();
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      showMsg(`${err.message}`, 'error');
     }
   };
 
   return (
     <div className="auth-modal">
+      <Notification />
       <div className="auth-content">
         <button className="auth-close" onClick={onClose}>
           &times;
         </button>
         <h2>Авторизация</h2>
-        {error && <div className="auth-error">{error}</div>}
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="login">Логин</label>
