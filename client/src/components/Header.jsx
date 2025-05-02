@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FiSun, FiMoon } from 'react-icons/fi';
+import { FiSun, FiMoon, FiSettings } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import './css/Header.css';
 
 const Header = ({ onAuthClick }) => {
@@ -20,11 +21,16 @@ const Header = ({ onAuthClick }) => {
 
   return (
     <header className="header">
-      <div className="header__logo">WHOUSE</div>
+      <Link to="/" className="header__logo">
+        <span className="header__logo-text">WHOUSE</span>
+      </Link>
       <div className="header__controls">
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === 'dark' ? <FiSun size={20} /> : <FiMoon size={20} />}
         </button>
+        <Link to="/admin" className="admin-link">
+          <FiSettings size={20} />
+        </Link>
         <button className="auth-button" onClick={onAuthClick}>
           Войти
         </button>
