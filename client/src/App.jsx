@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import './App.css';
 import './style/colors.css';
 import Header from './components/Header';
 import Auth from './components/Auth';
 import AdminAuth from './components/adminAuth';
+import ProtectedRoute from './components/ProtectedRoute';
+import Dashboard from './pages/dashboard';
 import { FiDatabase, FiUsers, FiAlertTriangle, FiKey, FiShield, FiPackage, FiBarChart2, FiEdit, FiLock } from 'react-icons/fi';
 
 const MainPage = () => {
@@ -90,27 +92,41 @@ const AdminPage = ({ onAdminAuthClick }) => {
 function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && window.location.pathname === '/') {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   return (
-    <Router>
-      <div className="App">
-        <Header 
-          onAuthClick={() => setShowAuth(true)} 
-          onAdminClick={() => setShowAdminAuth(true)}
+    <div className="App">
+      <Header 
+        onAuthClick={() => setShowAuth(true)} 
+        onAdminClick={() => setShowAdminAuth(true)}
+      />
+      
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route 
+          path="/admin" 
+          element={<AdminPage onAdminAuthClick={() => setShowAdminAuth(true)} />} 
         />
-        
-        <Routes>
-          <Route path="/" element={<MainPage />} />
-          <Route 
-            path="/admin" 
-            element={<AdminPage onAdminAuthClick={() => setShowAdminAuth(true)} />} 
-          />
-        </Routes>
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
 
-        {showAuth && <Auth onClose={() => setShowAuth(false)} />}
-        {showAdminAuth && <AdminAuth onClose={() => setShowAdminAuth(false)} />}
-      </div>
-    </Router>
+      {showAuth && <Auth onClose={() => setShowAuth(false)} />}
+      {showAdminAuth && <AdminAuth onClose={() => setShowAdminAuth(false)} />}
+    </div>
   );
 }
 

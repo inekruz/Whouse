@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
-import { FiSun, FiMoon, FiSettings } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { FiSun, FiMoon, FiSettings, FiLogOut } from 'react-icons/fi';
+import { Link, useNavigate } from 'react-router-dom';
 import './css/Header.css';
 
 const Header = ({ onAuthClick }) => {
   const [theme, setTheme] = useState('dark');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
+
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
   }, []);
 
   const toggleTheme = () => {
@@ -17,6 +22,12 @@ const Header = ({ onAuthClick }) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    navigate('/');
   };
 
   return (
@@ -31,9 +42,15 @@ const Header = ({ onAuthClick }) => {
         <Link to="/admin" className="admin-link">
           <FiSettings size={20} />
         </Link>
-        <button className="auth-button" onClick={onAuthClick}>
-          Войти
-        </button>
+        {isAuthenticated ? (
+          <button className="auth-button" onClick={handleLogout}>
+            <FiLogOut size={20} /> Выйти
+          </button>
+        ) : (
+          <button className="auth-button" onClick={onAuthClick}>
+            Войти
+          </button>
+        )}
       </div>
     </header>
   );
