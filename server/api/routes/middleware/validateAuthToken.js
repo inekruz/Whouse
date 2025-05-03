@@ -10,7 +10,7 @@ const generateToken = (userId) => {
 
 const validateAuthToken = async (req, res, next) => {
   const clientToken = req.headers['x-auth-token'];
-  const user_id = req.body.user_code || req.body.userCode;
+  const user_id = req.body.user_code || req.body.adminCode;
 
   if (!clientToken || !user_id) {
     return res.status(400).json({ message: 'Ты ничего не забыл добавить :)' });
