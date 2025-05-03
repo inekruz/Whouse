@@ -43,7 +43,7 @@ router.post('/get', validateAuthToken, async (req, res) => {
 });
 
 // Создание пользователя
-router.post('/', validateAuthToken, async (req, res) => {
+router.post('/add', validateAuthToken, async (req, res) => {
   try {
     const { username, login, password, user_code } = req.body;
     
@@ -75,7 +75,7 @@ router.post('/', validateAuthToken, async (req, res) => {
 });
 
 // Обновление пользователя
-router.put('/:id', validateAuthToken, async (req, res) => {
+router.put('/upd/:id', validateAuthToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { username, login, password, user_code } = req.body;

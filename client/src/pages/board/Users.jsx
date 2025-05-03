@@ -43,7 +43,7 @@ const Users = () => {
     try {
       setLoading(true);
       const adminCode = getAdminCode();
-      const response = await axios.post('https://api.whous.ru/adm/users/get', {
+      const response = await axios.post('https://api.whous.ru/users/get', {
         page: pagination.page,
         limit: pagination.limit,
         search: search,
@@ -137,11 +137,11 @@ const Users = () => {
       let response;
       
       if (modalType === 'create') {
-        response = await axios.post('https://api.whous.ru/adm/users', requestData, {
+        response = await axios.post('https://api.whous.ru/users/add', requestData, {
           headers: getAuthHeaders()
         });
       } else {
-        response = await axios.put(`https://api.whous.ru/adm/users/${currentUser.id}`, requestData, {
+        response = await axios.put(`https://api.whous.ru/users/upd/${currentUser.id}`, requestData, {
           headers: getAuthHeaders()
         });
       }
@@ -159,7 +159,7 @@ const Users = () => {
     
     try {
       const adminCode = getAdminCode();
-      await axios.post('https://api.whous.ru/adm/users/delete', {
+      await axios.post('https://api.whous.ru/users/delete', {
         id: id,
         adminCode: adminCode
       }, {

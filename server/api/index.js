@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 
 app.use('/auth', Auth);
 app.use('/adm', Admin);
-app.use('/adm/user', AdmUsers)
+app.use('/users', AdmUsers)
 
 const startServer = () => {
   server.listen(config.port, () => {
