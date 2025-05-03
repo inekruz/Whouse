@@ -10,7 +10,7 @@ const generateToken = (userId) => {
 
 const validateAuthToken = async (req, res, next) => {
   const clientToken = req.headers['x-auth-token'];
-  const user_id = req.body.user_id || req.body.userId;
+  const user_id = req.body.user_code || req.body.userCode;
 
   if (!clientToken || !user_id) {
     return res.status(400).json({ message: 'Ты ничего не забыл добавить :)' });
@@ -40,14 +40,14 @@ const validateAuthToken = async (req, res, next) => {
 
   try {
     // Проверка, был ли уже использован
-    const result = await db.query('SELECT * FROM used_tokens WHERE token = $1', [clientToken]);
+    const result = await db.query('SELECT * FROM wh_used_tokens WHERE token = $1', [clientToken]);
 
     if (result.rows.length > 0) {
       return res.status(403).json({ message: 'Такой токен уже использовали! Не жульничай!' });
     }
 
     // Добавление токена
-    await db.query('INSERT INTO used_tokens (token, user_id, created_at) VALUES ($1, $2, NOW())', [clientToken, user_id]);
+    await db.query('INSERT INTO wh_used_tokens (token, user_id, created_at) VALUES ($1, $2, NOW())', [clientToken, user_id]);
   } catch (error) {
     console.error('Ошибка при проверке токена:', error);
     return res.status(500).json({ message: 'Внутренняя ошибка сервера' });

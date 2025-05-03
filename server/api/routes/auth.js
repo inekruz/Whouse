@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 const jwt = require('jsonwebtoken');
+const validateAuthToken = require('./middleware/validateAuthToken');
 require('dotenv').config();
 
-router.post('/login', async (req, res) => {
+router.post('/login', validateAuthToken, async (req, res) => {
   try {
     const { login, password, user_code } = req.body;
 
