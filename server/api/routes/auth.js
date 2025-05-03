@@ -13,13 +13,13 @@ router.post('/login', validateAuthToken, async (req, res) => {
     if (!login || !password || !user_code) {
       return res.status(400).json({ error: 'Login, password and user_code are required' });
     }
-
+  const hashedPassword = await bcrypt.hash(password, 10);
     // Ищем пользователя в базе данных
     const query = `
       SELECT * FROM wh_users 
       WHERE login = $1 AND password = $2 AND user_code = $3
     `;
-    const { rows } = await db.query(query, [login, password, user_code]);
+    const { rows } = await db.query(query, [login, hashedPassword, user_code]);
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
