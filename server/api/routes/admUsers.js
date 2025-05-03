@@ -61,8 +61,8 @@ router.post('/add', validateAuthToken, async (req, res) => {
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
-    let randomInRange = getRandomNumber(10, 50);
-    let user_id = Number(randomInRange) + Number(user_code);
+    let randomInRange = getRandomNumber(100000, 500000);
+    let user_id = (Number(randomInRange) + Number(user_code)).toFixed();
     const newUser = await db.query(
       'INSERT INTO wh_users (user_id, username, login, password, user_code) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [user_id, username, login, hashedPassword, user_code]
