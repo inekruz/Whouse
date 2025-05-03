@@ -4,7 +4,6 @@ const router = express.Router();
 const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthToken');
 const bcrypt = require('bcrypt');
-const config = require('../../config');
 
 router.post('/get', validateAuthToken, async (req, res) => {
   try {
@@ -23,7 +22,7 @@ router.post('/get', validateAuthToken, async (req, res) => {
 
     const adminToken = jwt.sign(
       { id: admin.rows[0].id, login: admin.rows[0].login, role: 'admin' },
-      config.jwtSecret,
+      process.env.AUTH_TOKEN,
       { expiresIn: '24h' }
     );
 
@@ -61,7 +60,7 @@ router.post('/register', validateAuthToken, async (req, res) => {
         login: newAdmin.rows[0].login, 
         role: 'admin' 
       },
-      config.jwtSecret,
+      process.env.AUTH_TOKEN,
       { expiresIn: '24h' }
     );
 
