@@ -17,16 +17,23 @@ router.post('/login', validateAuthToken, async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
     // Ищем пользователя в базе данных
     const query = `
-      SELECT * FROM wh_users 
-      WHERE login = $1 AND password = $2 AND user_code = $3
+    SELECT * FROM wh_users 
+    WHERE login = $1 AND user_code = $2
     `;
-    const { rows } = await db.query(query, [login, hashedPassword, user_code]);
-
+    const { rows } = await db.query(query, [login, user_code]);
+    
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
+    
     const user = rows[0];
+    
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
 
     // Создаем JWT токен
     const token = jwt.sign(
