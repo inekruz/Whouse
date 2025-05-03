@@ -42,6 +42,10 @@ router.post('/get', validateAuthToken, async (req, res) => {
   }
 });
 
+function getRandomNumber(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
 // Создание пользователя
 router.post('/add', validateAuthToken, async (req, res) => {
   try {
@@ -57,10 +61,11 @@ router.post('/add', validateAuthToken, async (req, res) => {
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+    let randomInRange = getRandomNumber(10, 50);
+    let user_id = Number(randomInRange) + Number(user_code);
     const newUser = await db.query(
-      'INSERT INTO wh_users (username, login, password, user_code) VALUES ($1, $2, $3, $4) RETURNING *',
-      [username, login, hashedPassword, user_code]
+      'INSERT INTO wh_users (user_id, username, login, password, user_code) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [user_id, username, login, hashedPassword, user_code]
     );
     
     res.json({
