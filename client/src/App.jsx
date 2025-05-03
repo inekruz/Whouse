@@ -7,6 +7,7 @@ import Auth from './components/Auth';
 import AdminAuth from './components/adminAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/dashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import { FiDatabase, FiUsers, FiAlertTriangle, FiKey, FiShield, FiPackage, FiBarChart2, FiEdit, FiLock } from 'react-icons/fi';
 
 const MainPage = () => {
@@ -96,8 +97,14 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const adminToken = localStorage.getItem('admtkn');
+    
     if (token && window.location.pathname === '/') {
       navigate('/dashboard');
+    }
+    
+    if (adminToken && window.location.pathname === '/admin') {
+      navigate('/admin/dashboard');
     }
   }, [navigate]);
 
@@ -113,6 +120,14 @@ function App() {
         <Route 
           path="/admin" 
           element={<AdminPage onAdminAuthClick={() => setShowAdminAuth(true)} />} 
+        />
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <ProtectedRoute admin={true}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/dashboard" 

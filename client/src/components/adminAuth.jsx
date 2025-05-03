@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { FiLock, FiUser, FiKey, FiLogIn } from 'react-icons/fi';
+import { FiLock, FiUser, FiKey, FiLogIn, FiUserPlus, FiX } from 'react-icons/fi';
+import { sendSecureRequest } from './SecureToken';
+import { useNavigate } from 'react-router-dom';
 import './css/AdminAuth.css';
 
 const AdminAuth = ({ onClose }) => {
+  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     login: '',
     password: '',
     confirmPassword: '',
     adminCode: ''
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,22 +22,80 @@ const AdminAuth = ({ onClose }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Здесь будет логика проверки и входа
-    console.log('Admin login attempt:', formData);
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      alert('Пароли не совпадают!');
+      return;
+    }
+  
+    const token = sendSecureRequest(formData.adminCode);
+    const endpoint = isLogin ? '/get' : '/register';
+    
+    try {
+      const response = await fetch(`https://api.whous.ru/adm${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify({
+          login: formData.login,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          adminCode: formData.adminCode
+        })
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка при выполнении запроса');
+      }
+  
+      if (data.token) {
+        localStorage.setItem('admtkn', data.token);
+        navigate('/admin/dashboard');
+      }
+  
+      alert(isLogin ? 'Вход выполнен успешно!' : 'Администратор зарегистрирован успешно!');
+      onClose();
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error.message || 'Произошла ошибка');
+    }
   };
 
   return (
     <div className="admin-auth-modal">
       <div className="admin-auth-content">
         <button className="admin-auth-close" onClick={onClose}>
-          &times;
+          <FiX />
         </button>
         <h2 className="admin-auth-title">
-          <FiLock className="icon" /> Административный вход
+          <FiLock className="icon" /> 
+          {isLogin ? 'Административный вход' : 'Регистрация администратора'}
         </h2>
-        
+        <div className="auth-mode-switcher">
+          <div className={`auth-mode-tabs ${isLogin ? 'login-active' : 'register-active'}`}>
+            <button
+              type="button"
+              className={`auth-mode-tab ${isLogin ? 'active' : ''}`}
+              onClick={() => setIsLogin(true)}
+            >
+              <FiLogIn className="icon" />
+              <span>Вход</span>
+            </button>
+            <div className="auth-mode-slider"></div>
+            <button
+              type="button"
+              className={`auth-mode-tab ${!isLogin ? 'active' : ''}`}
+              onClick={() => setIsLogin(false)}
+            >
+              <FiUserPlus className="icon" />
+              <span>Регистрация</span>
+            </button>
+          </div>
+        </div>
         <form className="admin-auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="login">
@@ -63,19 +125,21 @@ const AdminAuth = ({ onClose }) => {
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="confirmPassword">
-              <FiKey className="icon" /> Повтор пароля
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {!isLogin && (
+            <div className="form-group">
+              <label htmlFor="confirmPassword">
+                <FiKey className="icon" /> Повтор пароля
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required={!isLogin}
+              />
+            </div>
+          )}
           
           <div className="form-group">
             <label htmlFor="adminCode">
@@ -92,7 +156,15 @@ const AdminAuth = ({ onClose }) => {
           </div>
           
           <button type="submit" className="admin-auth-submit">
-            <FiLogIn className="icon" /> Войти как администратор
+            {isLogin ? (
+              <>
+                <FiLogIn className="icon" /> Войти
+              </>
+            ) : (
+              <>
+                <FiUserPlus className="icon" /> Зарегистрироваться
+              </>
+            )}
           </button>
         </form>
       </div>

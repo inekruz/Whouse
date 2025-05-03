@@ -6,6 +6,7 @@ import './css/Header.css';
 const Header = ({ onAuthClick }) => {
   const [theme, setTheme] = useState('dark');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,20 +15,29 @@ const Header = ({ onAuthClick }) => {
     document.documentElement.setAttribute('data-theme', savedTheme);
 
     const token = localStorage.getItem('token');
+    const adminToken = localStorage.getItem('admtkn');
+    
     setIsAuthenticated(!!token);
+    setIsAdmin(!!adminToken);
   }, []);
+
+  const handleLogout = () => {
+    if (isAdmin) {
+      localStorage.removeItem('admtkn');
+      setIsAdmin(false);
+      navigate('/admin');
+    } else {
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+      navigate('/');
+    }
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-    navigate('/');
   };
 
   return (
@@ -39,12 +49,18 @@ const Header = ({ onAuthClick }) => {
         <button className="theme-toggle" onClick={toggleTheme}>
           {theme === 'dark' ? <FiSun size={20} /> : <FiMoon size={20} />}
         </button>
-        <Link to="/admin" className="admin-link">
-          <FiSettings size={20} />
-        </Link>
-        {isAuthenticated ? (
+        {isAdmin ? (
+          <Link to="/admin/dashboard" className="admin-link">
+            <FiSettings size={20} />
+          </Link>
+        ) : (
+          <Link to="/admin" className="admin-link">
+            <FiSettings size={20} />
+          </Link>
+        )}
+        {(isAuthenticated || isAdmin) ? (
           <button className="auth-button" onClick={handleLogout}>
-            <FiLogOut size={20} /> Выйти
+            <FiLogOut size={22} /> Выйти
           </button>
         ) : (
           <button className="auth-button" onClick={onAuthClick}>

@@ -6,6 +6,5 @@ export function sendSecureRequest(userId) {
   const token = SHA256(raw).toString();
 
   const tokenWithTimestamp = `${timestamp}-${token}`;
-
   return tokenWithTimestamp;
 }

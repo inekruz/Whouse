@@ -1,0 +1,206 @@
+.admin-dashboard {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--secondary-color);
+  }
+  
+  /* Сайдбар */
+  .admin-sidebar {
+    width: 280px;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+  }
+  
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .header-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    color: var(--link-color);
+  }
+  
+  .sidebar-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-color);
+  }
+  
+  /* Навигация */
+  .sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .nav-button {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    margin: 0 10px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    text-align: left;
+  }
+  
+  .nav-button:hover {
+    background-color: var(--ternary-color);
+    color: var(--text-color);
+  }
+  
+  .nav-button.active {
+    background: var(--button-gradient);
+    color: var(--text-color);
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .nav-icon {
+    font-size: 18px;
+    margin-right: 10px;
+  }
+  
+  /* Футер сайдбара */
+  .sidebar-footer {
+    padding: 10px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .logout-button, .home-button {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+  
+  .logout-button:hover {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  
+  .home-button:hover {
+    background-color: var(--ternary-color);
+    color: var(--text-color);
+  }
+  
+  /* Контентная область */
+  .admin-content {
+    flex: 1;
+    padding: 30px;
+    background-color: var(--secondary-color);
+  }
+  
+  .content-header {
+    margin-bottom: 25px;
+  }
+  
+  .content-header h2 {
+    display: flex;
+    align-items: center;
+    color: var(--text-color);
+    font-size: 24px;
+    margin: 0;
+  }
+  
+  .header-tab-icon {
+    margin-right: 10px;
+    color: var(--link-color);
+  }
+  
+  .tab-content {
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .tab-content h2 {
+    display: none; /* Скрываем дублирующий заголовок */
+  }
+  
+  .content-card {
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+  }
+  
+  .content-card p {
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .admin-dashboard {
+      flex-direction: column;
+    }
+    
+    .admin-sidebar {
+      width: 100%;
+      padding: 10px 0;
+    }
+    
+    .sidebar-nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      padding: 10px;
+      gap: 5px;
+    }
+    
+    .nav-button {
+      flex: 1;
+      min-width: 120px;
+      justify-content: center;
+      padding: 10px 5px;
+    }
+    
+    .nav-button span {
+      display: none;
+    }
+    
+    .nav-icon {
+      margin-right: 0;
+      font-size: 20px;
+    }
+    
+    .sidebar-footer {
+      flex-direction: row;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .admin-content {
+      padding: 20px;
+    }
+  }

@@ -70,6 +70,10 @@
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
+  font-size: 18px;
+  align-items: center;
+  display: flex;
+  gap: 5px;
 }
 
 .auth-button:hover {
