@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { FiLock, FiUser, FiKey, FiLogIn, FiUserPlus, FiX } from 'react-icons/fi';
 import { sendSecureRequest } from './SecureToken';
 import { useNavigate } from 'react-router-dom';
+import Notification from './Notification';
+import { showMsg } from './Notification';
 import './css/AdminAuth.css';
 
 const AdminAuth = ({ onClose }) => {
@@ -25,7 +27,7 @@ const AdminAuth = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isLogin && formData.password !== formData.confirmPassword) {
-      alert('Пароли не совпадают!');
+      showMsg('Пароли не совпадают!', 'error');
       return;
     }
   
@@ -49,7 +51,7 @@ const AdminAuth = ({ onClose }) => {
   
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Ошибка при выполнении запроса');
+        showMsg('Ошибка при выполнении запроса', 'error');
       }
   
       if (data.token) {
@@ -57,16 +59,17 @@ const AdminAuth = ({ onClose }) => {
         navigate('/admin/dashboard');
       }
   
-      alert(isLogin ? 'Вход выполнен успешно!' : 'Администратор зарегистрирован успешно!');
+      showMsg('Вход выполнен успешно!', 'success');
       onClose();
     } catch (error) {
       console.error('Error:', error);
-      alert(error.message || 'Произошла ошибка');
+      showMsg('Произошла ошибка', 'error');
     }
   };
 
   return (
     <div className="admin-auth-modal">
+            <Notification />
       <div className="admin-auth-content">
         <button className="admin-auth-close" onClick={onClose}>
           <FiX />

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiLock, FiUsers, FiSettings, FiDatabase, FiBarChart2, FiLogOut, FiHome } from 'react-icons/fi';
+import { FiLock, FiUsers, FiClock, FiDatabase, FiBarChart2, FiLogOut, FiHome } from 'react-icons/fi';
 import Users from './board/Users';
-import Settings from './board/Settings';
+import History from './board/History';
 import Backup from './board/Backup';
 import Stats from './board/Stats';
 import './css/AdminDashboard.css';
@@ -27,8 +27,8 @@ const AdminDashboard = () => {
     switch (activeTab) {
       case 'users':
         return <Users />;
-      case 'settings':
-        return <Settings />;
+      case 'history':
+        return <History />;
       case 'backup':
         return <Backup />;
       case 'stats':
@@ -56,11 +56,11 @@ const AdminDashboard = () => {
           </button>
           
           <button 
-            className={`nav-button ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
+            className={`nav-button ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
           >
-            <FiSettings className="nav-icon" />
-            <span>Настройки</span>
+            <FiClock className="nav-icon" />
+            <span>История</span>
           </button>
           
           <button 
