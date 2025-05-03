@@ -20,6 +20,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('admtkn');
+    localStorage.removeItem('adminCode');
     navigate('/admin');
   };
 

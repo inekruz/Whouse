@@ -5,6 +5,7 @@ const cors = require('cors');
 const config = require('../config/config');
 const Auth = require('./routes/auth');
 const Admin = require('./routes/admin');
+const AdmUsers = require('./routes/admUsers');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 
 app.use('/auth', Auth);
 app.use('/adm', Admin);
+app.use('/adm/user', AdmUsers)
 
 const startServer = () => {
   server.listen(config.port, () => {

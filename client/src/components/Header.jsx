@@ -24,6 +24,7 @@ const Header = ({ onAuthClick }) => {
   const handleLogout = () => {
     if (isAdmin) {
       localStorage.removeItem('admtkn');
+      localStorage.removeItem('adminCode')
       setIsAdmin(false);
       navigate('/admin');
     } else {

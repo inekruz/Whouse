@@ -56,6 +56,7 @@ const AdminAuth = ({ onClose }) => {
   
       if (data.token) {
         localStorage.setItem('admtkn', data.token);
+        localStorage.setItem('adminCode', data.adminCode);
         navigate('/admin/dashboard');
       }
   
