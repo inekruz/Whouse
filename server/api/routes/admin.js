@@ -26,7 +26,7 @@ router.post('/get', validateAuthToken, async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.json({ success: true, message: 'Аутентификация успешна', token: adminToken });
+    res.json({ success: true, message: 'Аутентификация успешна', token: adminToken, adminCode: adminCode });
 
   } catch (error) {
     console.error('Error:', error);
@@ -67,7 +67,8 @@ router.post('/register', validateAuthToken, async (req, res) => {
     res.json({ 
       success: true, 
       message: 'Администратор успешно зарегистрирован',
-      token: adminToken
+      token: adminToken,
+      adminCode: adminCode
     });
 
   } catch (error) {
