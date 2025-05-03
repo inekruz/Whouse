@@ -14,7 +14,6 @@ router.post('/login', validateAuthToken, async (req, res) => {
     if (!login || !password || !user_code) {
       return res.status(400).json({ error: 'Login, password and user_code are required' });
     }
-  const hashedPassword = await bcrypt.hash(password, 10);
     // Ищем пользователя в базе данных
     const query = `
     SELECT * FROM wh_users 
@@ -34,7 +33,6 @@ router.post('/login', validateAuthToken, async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-
     // Создаем JWT токен
     const token = jwt.sign(
       {
