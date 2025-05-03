@@ -42,7 +42,7 @@ router.post('/login', validateAuthToken, async (req, res) => {
         username: user.username,
         login: user.login
       },
-      process.env.JWT_SECRET,
+      process.env.AUTH_TOKEN,
       { expiresIn: '12h' }
     );
 
