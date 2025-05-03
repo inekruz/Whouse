@@ -18,12 +18,6 @@ const AdminDashboard = () => {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('admtkn');
-    localStorage.removeItem('adminCode');
-    navigate('/admin');
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'users':
@@ -81,16 +75,6 @@ const AdminDashboard = () => {
           </button>
         </nav>
         
-        <div className="sidebar-footer">
-          <button className="home-button" onClick={() => navigate('/')}>
-            <FiHome className="nav-icon" />
-            <span>На главную</span>
-          </button>
-          <button className="logout-button" onClick={handleLogout}>
-            <FiLogOut className="nav-icon" />
-            <span>Выйти</span>
-          </button>
-        </div>
       </div>
       
       <div className="admin-content">
