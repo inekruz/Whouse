@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiLock, FiUsers, FiSettings, FiDatabase, FiBarChart2, FiLogOut, FiHome } from 'react-icons/fi';
+import Users from './board/Users';
+import Settings from './board/Settings';
+import Backup from './board/Backup';
+import Stats from './board/Stats';
 import './css/AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -22,43 +26,15 @@ const AdminDashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'users':
-        return (
-          <div className="tab-content">
-            <h2>Управление пользователями</h2>
-            <div className="content-card">
-              <p>Здесь будет интерфейс для управления пользователями системы</p>
-            </div>
-          </div>
-        );
+        return <Users />;
       case 'settings':
-        return (
-          <div className="tab-content">
-            <h2>Настройки системы</h2>
-            <div className="content-card">
-              <p>Здесь будут настройки конфигурации системы</p>
-            </div>
-          </div>
-        );
+        return <Settings />;
       case 'backup':
-        return (
-          <div className="tab-content">
-            <h2>Резервное копирование</h2>
-            <div className="content-card">
-              <p>Здесь будет управление резервными копиями</p>
-            </div>
-          </div>
-        );
+        return <Backup />;
       case 'stats':
-        return (
-          <div className="tab-content">
-            <h2>Статистика системы</h2>
-            <div className="content-card">
-              <p>Здесь будет аналитика и статистика работы системы</p>
-            </div>
-          </div>
-        );
+        return <Stats />;
       default:
-        return null;
+        return <Users />;
     }
   };
 
@@ -117,15 +93,6 @@ const AdminDashboard = () => {
       </div>
       
       <div className="admin-content">
-        <div className="content-header">
-          <h2>
-            {activeTab === 'users' && <FiUsers className="header-tab-icon" />}
-            {activeTab === 'settings' && <FiSettings className="header-tab-icon" />}
-            {activeTab === 'backup' && <FiDatabase className="header-tab-icon" />}
-            {activeTab === 'stats' && <FiBarChart2 className="header-tab-icon" />}
-            {renderTabContent().props.children[0]}
-          </h2>
-        </div>
         {renderTabContent()}
       </div>
     </div>

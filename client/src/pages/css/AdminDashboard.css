@@ -109,20 +109,25 @@
     color: var(--text-color);
   }
   
-  /* Контентная область */
-  .admin-content {
+/* Контентная область */
+.admin-content {
     flex: 1;
     padding: 30px;
     background-color: var(--secondary-color);
   }
   
+  /* Общие стили для всех вкладок */
+  .tab-content {
+    animation: fadeIn 0.3s ease;
+  }
+  
   .content-header {
+    display: flex;
+    align-items: center;
     margin-bottom: 25px;
   }
   
   .content-header h2 {
-    display: flex;
-    align-items: center;
     color: var(--text-color);
     font-size: 24px;
     margin: 0;
@@ -131,14 +136,7 @@
   .header-tab-icon {
     margin-right: 10px;
     color: var(--link-color);
-  }
-  
-  .tab-content {
-    animation: fadeIn 0.3s ease;
-  }
-  
-  .tab-content h2 {
-    display: none; /* Скрываем дублирующий заголовок */
+    font-size: 24px;
   }
   
   .content-card {
