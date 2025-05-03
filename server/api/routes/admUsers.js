@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
-const validateAuthToken = require('./middleware/validateAuthToken');
+const validateAuthToken = require('./middleware/validateAuthTokenAdmin');
 const bcrypt = require('bcrypt');
 
 // Получение списка пользователей
