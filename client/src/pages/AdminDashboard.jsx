@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiLock, FiUsers, FiClock, FiDatabase, FiBarChart2, FiLogOut, FiHome } from 'react-icons/fi';
+import { FiLock, FiUsers, FiClock, FiDatabase, FiBarChart2 } from 'react-icons/fi';
 import Users from './board/Users';
 import History from './board/History';
 import Backup from './board/Backup';

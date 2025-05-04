@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { FiUsers, FiSearch, FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -39,36 +40,41 @@ const Users = () => {
     };
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const adminCode = getAdminCode();
+      const token = sendSecureRequest(adminCode);
       const response = await axios.post('https://api.whous.ru/users/get', {
         page: pagination.page,
         limit: pagination.limit,
         search: search,
         adminCode: adminCode
       }, {
-        headers: getAuthHeaders()
+        headers: {
+          'x-auth-token': token,
+          'Content-Type': 'application/json'
+        }
       });
-      
+  
       setUsers(response.data.data);
-      setPagination({
-        ...pagination,
+      setPagination(prev => ({
+        ...prev,
         total: response.data.pagination.total,
         totalPages: response.data.pagination.totalPages
-      });
+      }));
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [pagination.page, pagination.limit, search]);
+  
+  
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page, search]);
-
+  }, [fetchUsers]);
+  
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= pagination.totalPages) {
       setPagination({ ...pagination, page: newPage });
@@ -134,14 +140,12 @@ const Users = () => {
         adminCode
       };
 
-      let response;
-      
       if (modalType === 'create') {
-        response = await axios.post('https://api.whous.ru/users/add', requestData, {
+        await axios.post('https://api.whous.ru/users/add', requestData, {
           headers: getAuthHeaders()
         });
       } else {
-        response = await axios.put(`https://api.whous.ru/users/upd/${currentUser.id}`, requestData, {
+        await axios.put(`https://api.whous.ru/users/upd/${currentUser.id}`, requestData, {
           headers: getAuthHeaders()
         });
       }
