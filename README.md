@@ -51,5 +51,18 @@
 
 ## 🧱 Архитектура
 
-```text
-[ Клиент (React) ] ⇄ [ API-сервер (Express) ] ⇄ [ БД (PostgreSQL) ]
+.env Frontend
+```
+PORT=
+REACT_APP_KEY=
+```
+.env Backend
+```
+PORT=
+AUTH_TOKEN=
+PG_USER=
+PG_PASSWORD=
+PG_HOST=
+PG_PORT=
+PG_DATABASE=
+```
