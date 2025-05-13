@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthToken');
+const { logAction } = require('./middleware/actionLogger');
+
+// Функция для записи действий в таблицу wh_actions
+async function logAction(user_code, action, name) {
+    const description = `Пользователь ${action} товар: ${name}`;
+    const query = `INSERT INTO wh_actions (user_code, description) VALUES ($1, $2)`;
+    await db.query(query, [user_code, description]);
+}
 
 // Получение всех товаров
 router.post('/getAll', validateAuthToken, async (req, res) => {
@@ -16,7 +24,7 @@ router.post('/getAll', validateAuthToken, async (req, res) => {
 
 // Добавление товара
 router.post('/add', validateAuthToken, async (req, res) => {
-  const { name, description, category_id, quantity, price } = req.body;
+  const { name, description, category_id, quantity, price, user_code } = req.body;
 
   try {
     const result = await db.query(
@@ -24,6 +32,8 @@ router.post('/add', validateAuthToken, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [name, description, category_id, quantity, price]
     );
+    await logAction(user_code, `Добавил товар: ${name} | ${category_id} | ${quantity} | ${price}`);
+
     res.status(201).json({ product: result.rows[0] });
   } catch (err) {
     console.error('Ошибка при добавлении товара:', err);
@@ -34,7 +44,7 @@ router.post('/add', validateAuthToken, async (req, res) => {
 // Обновление товара
 router.put('/update/:id', validateAuthToken, async (req, res) => {
   const { id } = req.params;
-  const { name, description, category_id, quantity, price } = req.body;
+  const { name, description, category_id, quantity, price, user_code } = req.body;
 
   try {
     const result = await db.query(
@@ -47,7 +57,7 @@ router.put('/update/:id', validateAuthToken, async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
     }
-
+    await logAction(user_code, `Изменил товар: ${name} | ${category_id} | ${quantity} | ${price}`);
     res.json({ product: result.rows[0] });
   } catch (err) {
     console.error('Ошибка при обновлении товара:', err);
@@ -58,6 +68,7 @@ router.put('/update/:id', validateAuthToken, async (req, res) => {
 // Удаление товара
 router.delete('/delete/:id', validateAuthToken, async (req, res) => {
   const { id } = req.params;
+  const { user_code } = req.body;
 
   try {
     const result = await db.query('DELETE FROM wh_products WHERE id = $1', [id]);
@@ -65,7 +76,7 @@ router.delete('/delete/:id', validateAuthToken, async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Товар не найден' });
     }
-
+    await logAction(user_code, `Удалил товар: ${id}`);
     res.status(200).json({ message: 'Товар успешно удалён' });
   } catch (err) {
     console.error('Ошибка при удалении товара:', err);
