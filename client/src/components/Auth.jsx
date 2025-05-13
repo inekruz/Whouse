@@ -48,6 +48,7 @@ const Auth = ({ onClose }) => {
       }
 
       localStorage.setItem('token', data.token);
+      localStorage.setItem('dnum', code);
       onClose();
       navigate('/dashboard');
     } catch (err) {
