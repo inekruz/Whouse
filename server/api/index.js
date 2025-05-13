@@ -6,6 +6,7 @@ const config = require('../config/config');
 const Auth = require('./routes/auth');
 const Admin = require('./routes/admin');
 const AdmUsers = require('./routes/admUsers');
+const Product = require('./routes/products');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,7 +20,8 @@ app.get('/', (req, res) => {
 
 app.use('/auth', Auth);
 app.use('/adm', Admin);
-app.use('/users', AdmUsers)
+app.use('/users', AdmUsers);
+app.use('/prd', Product);
 
 const startServer = () => {
   server.listen(config.port, () => {
