@@ -4,13 +4,6 @@ const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthToken');
 const { logAction } = require('./middleware/actionLogger');
 
-// Функция для записи действий в таблицу wh_actions
-async function logAction(user_code, action, name) {
-    const description = `Пользователь ${action} товар: ${name}`;
-    const query = `INSERT INTO wh_actions (user_code, description) VALUES ($1, $2)`;
-    await db.query(query, [user_code, description]);
-}
-
 // Получение всех товаров
 router.post('/getAll', validateAuthToken, async (req, res) => {
   try {
