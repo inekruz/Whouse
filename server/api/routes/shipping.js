@@ -151,4 +151,137 @@ router.post('/ship', validateAuthToken, async (req, res) => {
   }
 });
 
+// Обновление партии
+router.post('/updateBatch', validateAuthToken, async (req, res) => {
+  const { id, batch_number, quantity, supplier, invoice_number, serial_numbers, user_code } = req.body;
+  
+  try {
+    await db.query('BEGIN');
+    
+    // Получаем текущие данные партии
+    const currentBatch = await db.query(
+      'SELECT product_id, quantity FROM wh_batches WHERE id = $1',
+      [id]
+    );
+    
+    if (currentBatch.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Партия не найдена'
+      });
+    }
+    
+    const productId = currentBatch.rows[0].product_id;
+    const oldQuantity = currentBatch.rows[0].quantity;
+    const quantityDiff = quantity - oldQuantity;
+    
+    // 1. Обновляем партию
+    const batchResult = await db.query(
+      `UPDATE wh_batches 
+       SET batch_number = $1, quantity = $2, supplier = $3, 
+           invoice_number = $4, serial_numbers = $5
+       WHERE id = $6
+       RETURNING *`,
+      [batch_number, quantity, supplier, invoice_number, serial_numbers, id]
+    );
+    
+    // 2. Обновляем количество товара, если изменилось количество
+    if (quantityDiff !== 0) {
+      await db.query(
+        `UPDATE wh_products 
+         SET quantity = quantity + $1 
+         WHERE id = $2`,
+        [quantityDiff, productId]
+      );
+    }
+    
+    // 3. Получаем обновленное количество товара для клиента
+    const updatedProduct = await db.query(
+      'SELECT id as product_id, quantity as new_quantity FROM wh_products WHERE id = $1',
+      [productId]
+    );
+    
+    // 4. Логируем действие
+    await logAction(user_code, `Обновление партии: ${batch_number}, изменение количества: ${quantityDiff}`);
+    
+    await db.query('COMMIT');
+    
+    res.json({
+      success: true,
+      batch: batchResult.rows[0],
+      updatedProduct: updatedProduct.rows[0]
+    });
+    
+  } catch (error) {
+    await db.query('ROLLBACK');
+    console.error('Error updating batch:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Ошибка при обновлении партии' 
+    });
+  }
+});
+
+// Удаление партии
+router.post('/deleteBatch', validateAuthToken, async (req, res) => {
+  const { batchId, user_code } = req.body;
+  
+  try {
+    await db.query('BEGIN');
+    
+    // 1. Получаем данные партии для обновления количества товара
+    const batch = await db.query(
+      'SELECT product_id, quantity FROM wh_batches WHERE id = $1',
+      [batchId]
+    );
+    
+    if (batch.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Партия не найдена'
+      });
+    }
+    
+    const productId = batch.rows[0].product_id;
+    const quantity = batch.rows[0].quantity;
+    
+    // 2. Удаляем партию
+    await db.query(
+      'DELETE FROM wh_batches WHERE id = $1',
+      [batchId]
+    );
+    
+    // 3. Обновляем количество товара
+    await db.query(
+      `UPDATE wh_products 
+       SET quantity = quantity - $1 
+       WHERE id = $2`,
+      [quantity, productId]
+    );
+    
+    // 4. Получаем обновленное количество товара для клиента
+    const updatedProduct = await db.query(
+      'SELECT id as product_id, quantity as new_quantity FROM wh_products WHERE id = $1',
+      [productId]
+    );
+    
+    // 5. Логируем действие
+    await logAction(user_code, `Удаление партии ID: ${batchId}, товара: ${productId}, количество: ${quantity}`);
+    
+    await db.query('COMMIT');
+    
+    res.json({
+      success: true,
+      updatedProduct: updatedProduct.rows[0]
+    });
+    
+  } catch (error) {
+    await db.query('ROLLBACK');
+    console.error('Error deleting batch:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Ошибка при удалении партии' 
+    });
+  }
+});
 module.exports = router;

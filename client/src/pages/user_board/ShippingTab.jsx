@@ -23,71 +23,70 @@ const ShippingTab = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBatch, setSelectedBatch] = useState(null);
+  const [filters, setFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+    supplier: '',
+    productId: ''
+  });
 
-// Загрузка данных с сервера
 useEffect(() => {
   const fetchData = async () => {
     try {
-      const token = sendSecureRequest(user_code);
-      
       // Загрузка товаров
+      const token1 = sendSecureRequest(user_code);
       const productsResponse = await fetch(`${API_BASE_URL}products`, {
-        method: 'POST', // Изменил на POST чтобы можно было передать body
+        method: 'POST',
         headers: {
-          'x-auth-token': token,
+          'x-auth-token': token1,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ user_code })
       });
       const productsData = await productsResponse.json();
       setProducts(productsData);
-      
+
       // Загрузка категорий
+      const token2 = sendSecureRequest(user_code);
       const categoriesResponse = await fetch(`${API_BASE_URL}categories`, {
         method: 'POST',
         headers: {
-          'x-auth-token': token,
+          'x-auth-token': token2,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ user_code })
       });
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
-      
+
       // Загрузка партий
+      const token3 = sendSecureRequest(user_code);
       const batchesResponse = await fetch(`${API_BASE_URL}batches`, {
         method: 'POST',
         headers: {
-          'x-auth-token': token,
+          'x-auth-token': token3,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ user_code })
       });
       const batchesData = await batchesResponse.json();
       setBatches(batchesData);
-      
+
     } catch (error) {
       showMsg('Ошибка загрузки данных', 'error');
       console.error('Error fetching data:', error);
     }
   };
-  
+
   fetchData();
 }, []);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleAddSerialNumbers = () => {
-    const serials = formData.serialNumbers.split('\n').filter(sn => sn.trim() !== '');
-    setFormData(prev => ({
-      ...prev,
-      serialNumbers: serials
     }));
   };
 
@@ -186,13 +185,116 @@ const handleShipProduct = async (e) => {
   }
 };
 
-  const filteredBatches = batches.filter(batch => {
-    const product = products.find(p => p.id === batch.product_id);
-    return (
-      batch.batch_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product && product.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
+// Обработчик изменения фильтров
+const handleFilterChange = (e) => {
+  const { name, value } = e.target;
+  setFilters(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
+// Функция для удаления партии
+const deleteBatch = async (batchId) => {
+  try {
+    const token = sendSecureRequest(user_code);
+    const response = await fetch(`${API_BASE_URL}deleteBatch`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        batchId,
+        user_code
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      setBatches(prev => prev.filter(b => b.id !== batchId));
+      // Обновляем количество товаров
+      if (result.updatedProduct) {
+        setProducts(prev => prev.map(p => 
+          p.id === result.updatedProduct.product_id 
+            ? { ...p, quantity: result.updatedProduct.new_quantity } 
+            : p
+        ));
+      }
+      showMsg('Партия успешно удалена!', 'success');
+      return true;
+    } else {
+      throw new Error(result.message || 'Ошибка при удалении партии');
+    }
+  } catch (error) {
+    showMsg(error.message, 'error');
+    console.error('Error deleting batch:', error);
+    return false;
+  }
+};
+
+// Обновленная функция фильтрации партий
+const filteredBatches = batches.filter(batch => {
+  const product = products.find(p => p.id === batch.product_id);
+  const matchesSearch = (
+    batch.batch_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product && product.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+  
+  const matchesFilters = (
+    (!filters.dateFrom || new Date(batch.received_date) >= new Date(filters.dateFrom)) &&
+    (!filters.dateTo || new Date(batch.received_date) <= new Date(filters.dateTo)) &&
+    (!filters.supplier || batch.supplier.toLowerCase().includes(filters.supplier.toLowerCase())) &&
+    (!filters.productId || batch.product_id === filters.productId)
+  );
+  
+  return matchesSearch && matchesFilters;
+});
+
+// Обновленная функция для обновления партии
+const updateBatch = async (updatedData) => {
+  try {
+    const token = sendSecureRequest(user_code);
+    const response = await fetch(`${API_BASE_URL}updateBatch`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...updatedData,
+        user_code
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      setBatches(prev => prev.map(b => 
+        b.id === result.batch.id ? result.batch : b
+      ));
+      
+      // Обновляем количество товара, если оно изменилось
+      if (result.updatedProduct) {
+        setProducts(prev => prev.map(p => 
+          p.id === result.updatedProduct.product_id 
+            ? { ...p, quantity: result.updatedProduct.new_quantity } 
+            : p
+        ));
+      }
+      
+      showMsg('Партия успешно обновлена!', 'success');
+      return true;
+    } else {
+      throw new Error(result.message || 'Ошибка при обновлении партии');
+    }
+  } catch (error) {
+    showMsg(error.message, 'error');
+    console.error('Error updating batch:', error);
+    return false;
+  }
+};
 
 return (
   <div className="tab-content">
@@ -214,7 +316,7 @@ return (
         </button>
         <button 
           className={`tab-button ${activeTab === 'batches' ? 'active' : ''}`}
-          onClick={() => setSelectedBatch(null)}
+          onClick={() => setActiveTab('batches')}
         >
           Учет партий
         </button>
@@ -269,25 +371,6 @@ return (
                   placeholder="BATCH-001-2023"
                 />
               </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="serialNumbers">Серийные номера (по одному на строку)</label>
-              <textarea 
-                id="serialNumbers" 
-                name="serialNumbers" 
-                rows="3"
-                value={formData.serialNumbers}
-                onChange={handleInputChange}
-                placeholder="SN-12345678\nSN-87654321"
-              />
-              <button 
-                type="button" 
-                className="secondary-button"
-                onClick={handleAddSerialNumbers}
-              >
-                Подтвердить серийные номера
-              </button>
             </div>
 
             <div className="form-row">
@@ -391,22 +474,69 @@ return (
         </div>
       )}
 
-      {activeTab === 'batches' && (
-        <>
-          <div className="card span-2">
-            <div className="batch-header">
-              <h3>Учёт партий и серийных номеров</h3>
-              <div className="search-box">
-                <input 
-                  type="text" 
-                  placeholder="Поиск по номеру партии или товару..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <span className="search-icon">🔍</span>
-              </div>
+{activeTab === 'batches' && (
+  <>
+    <div className="card span-2">
+      <div className="batch-header">
+        <h3>Учёт партий и серийных номеров</h3>
+        <div className="batch-controls">
+          <div className="search-box">
+            <input 
+              type="text" 
+              placeholder="Поиск по номеру партии или товару..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <span className="search-icon">🔍</span>
+          </div>
+          
+          <div className="batch-filters">
+            <div className="filter-group">
+              <label>Дата от</label>
+              <input 
+                type="date" 
+                name="dateFrom"
+                value={filters.dateFrom}
+                onChange={handleFilterChange}
+              />
             </div>
-
+            <div className="filter-group">
+              <label>Дата до</label>
+              <input 
+                type="date" 
+                name="dateTo"
+                value={filters.dateTo}
+                onChange={handleFilterChange}
+              />
+            </div>
+            <div className="filter-group">
+              <label>Поставщик</label>
+              <input 
+                type="text" 
+                name="supplier"
+                value={filters.supplier}
+                onChange={handleFilterChange}
+                placeholder="Фильтр по поставщику"
+              />
+            </div>
+            <div className="filter-group">
+              <label>Товар</label>
+              <select 
+                name="productId"
+                value={filters.productId}
+                onChange={handleFilterChange}
+              >
+                <option value="">Все товары</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
             <div className="batch-list">
               {filteredBatches.length > 0 ? (
                 <table>
@@ -456,58 +586,106 @@ return (
             </div>
           </div>
 
-          {selectedBatch && (
-            <div className="card batch-details">
-              <div className="batch-details-header">
-                <h4>Детали партии: {selectedBatch.batch_number}</h4>
-                <button 
-                  className="close-button"
-                  onClick={() => setSelectedBatch(null)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="batch-info">
-                <div className="info-row">
-                  <span className="info-label">Товар:</span>
-                  <span className="info-value">
-                    {products.find(p => p.id === selectedBatch.product_id)?.name || 'Неизвестный товар'}
-                  </span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Количество:</span>
-                  <span className="info-value">{selectedBatch.quantity}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Дата приемки:</span>
-                  <span className="info-value">
-                    {new Date(selectedBatch.received_date).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Поставщик:</span>
-                  <span className="info-value">{selectedBatch.supplier}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Номер накладной:</span>
-                  <span className="info-value">{selectedBatch.invoice_number}</span>
-                </div>
-              </div>
-
-              {selectedBatch.serial_numbers && selectedBatch.serial_numbers.length > 0 && (
-                <div className="serial-numbers">
-                  <h5>Серийные номера:</h5>
-                  <div className="serial-numbers-list">
-                    {selectedBatch.serial_numbers.map((sn, index) => (
-                      <span key={index} className="serial-number-tag">{sn}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
+        {selectedBatch && (
+          <div className="card batch-details">
+            <div className="batch-details-header">
+              <h4>Детали партии: {selectedBatch.batch_number}</h4>
+              <button 
+                className="close-button"
+                onClick={() => setSelectedBatch(null)}
+              >
+                ×
+              </button>
             </div>
-          )}
-        </>
+
+        <div className="batch-info">
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const updated = await updateBatch({
+                id: selectedBatch.id,
+                batch_number: formData.get('batch_number'),
+                quantity: parseInt(formData.get('quantity')),
+                supplier: formData.get('supplier'),
+                invoice_number: formData.get('invoice_number'),
+                serial_numbers: formData.get('serial_numbers')?.split(',') || []
+              });
+              if (updated) setSelectedBatch(null);
+            }}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Номер партии</label>
+                  <input 
+                    type="text" 
+                    name="batch_number"
+                    defaultValue={selectedBatch.batch_number}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Количество</label>
+                  <input 
+                    type="number" 
+                    name="quantity"
+                    min="1"
+                    defaultValue={selectedBatch.quantity}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Поставщик</label>
+                  <input 
+                    type="text" 
+                    name="supplier"
+                    defaultValue={selectedBatch.supplier}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Номер накладной</label>
+                  <input 
+                    type="text" 
+                    name="invoice_number"
+                    defaultValue={selectedBatch.invoice_number}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label>Серийные номера (через запятую)</label>
+                <textarea 
+                  name="serial_numbers"
+                  defaultValue={selectedBatch.serial_numbers?.join(', ') || ''}
+                  rows="3"
+                />
+              </div>
+              
+            <div className="form-actions">
+              <button type="submit" className="primary-button">
+                Сохранить изменения
+              </button>
+              <button 
+                type="button" 
+                className="danger-button"
+                onClick={async () => {
+                  if (window.confirm('Вы уверены, что хотите удалить эту партию? Это уменьшит количество товара на складе.')) {
+                    const deleted = await deleteBatch(selectedBatch.id);
+                    if (deleted) setSelectedBatch(null);
+                  }
+                }}
+              >
+                Удалить партию
+              </button>
+            </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
       )}
 
       <div className="card quick-stats">
