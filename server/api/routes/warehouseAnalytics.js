@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthTokenAdmin');
 const WarehouseMathService = require('./middleware/warehouseMathService');
+const WarehouseMath = require('./middleware/warehouseMathService');
 
 // Обновление всех моделей (можно вызывать по расписанию или вручную)
 router.post('/update-models', validateAuthToken, async (req, res) => {
