@@ -7,7 +7,6 @@ const { Transform } = require('stream');
 router.post('/backup', validateAuthToken, async (req, res) => {
   const { tableName } = req.body;
 
-  // Проверяем, что таблица начинается с wh_
   if (!tableName || !tableName.startsWith('wh_')) {
     return res.status(400).json({
       success: false,
@@ -15,8 +14,12 @@ router.post('/backup', validateAuthToken, async (req, res) => {
     });
   }
 
+  let client;
   try {
-    const tableExists = await db.query(`
+    client = await db.connect();
+    
+    // Проверяем существование таблицы
+    const tableExists = await client.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
@@ -31,29 +34,16 @@ router.post('/backup', validateAuthToken, async (req, res) => {
       });
     }
 
-    // Устанавливаем заголовки для скачивания CSV файла
+    // Устанавливаем заголовки для скачивания CSV
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=${tableName}_backup_${new Date().toISOString().slice(0,10)}.csv`);
 
-    // Создаем поток для преобразования данных в CSV
-    const csvTransform = new Transform({
-      transform(chunk, encoding, callback) {
-        this.push(chunk);
-        callback();
-      }
-    });
+    // Используем режим потоковой передачи
+    const stream = client.query(
+      new (require('pg').Query)(`COPY (SELECT * FROM ${tableName}) TO STDOUT WITH CSV HEADER`)
+    );
 
-    // Получаем данные из таблицы и конвертируем в CSV
-    // Исправленная строка - убрали new db.Query()
-    const queryStream = db.query(`
-      COPY (SELECT * FROM ${tableName}) TO STDOUT WITH CSV HEADER
-    `);
-
-    // Отправляем данные клиенту
-    queryStream.pipe(csvTransform).pipe(res);
-
-    // Обработка ошибок потоков
-    queryStream.on('error', (err) => {
+    stream.on('error', (err) => {
       console.error('Ошибка потока базы данных:', err);
       if (!res.headersSent) {
         res.status(500).json({
@@ -61,20 +51,16 @@ router.post('/backup', validateAuthToken, async (req, res) => {
           message: 'Error generating CSV backup'
         });
       }
+      client.release();
     });
 
-    csvTransform.on('error', (err) => {
-      console.error('Ошибка преобразования CSV:', err);
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          message: 'Error processing CSV data'
-        });
-      }
+    stream.pipe(res).on('finish', () => {
+      client.release();
     });
 
   } catch (error) {
     console.error('Ошибка во время резервного копирования таблицы:', error);
+    if (client) client.release();
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
