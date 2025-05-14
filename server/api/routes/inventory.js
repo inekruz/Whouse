@@ -106,7 +106,7 @@ router.post('/transfers/add', validateAuthToken, async (req, res) => {
 });
 
 // Добавление инвентаризации
-router.post('/inventory-checks/add', validateAuthToken, async (req, res) => {
+router.post('/inventory/add', validateAuthToken, async (req, res) => {
   try {
     const { user_code, items_checked, discrepancies, status } = req.body;
     

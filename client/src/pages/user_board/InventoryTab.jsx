@@ -18,7 +18,9 @@ const InventoryModule = () => {
   // Функция для загрузки данных
   const fetchData = async () => {
     try {
-      const authToken = await sendSecureRequest(user_code);
+      const authToken = sendSecureRequest(user_code);
+      const authToken2 = sendSecureRequest(user_code);
+      const authToken3 = sendSecureRequest(user_code);
       
       const [stockResponse, transfersResponse, inventoryResponse] = await Promise.all([
         fetch(`${BASE_URL}/products`, {
@@ -33,7 +35,7 @@ const InventoryModule = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': authToken
+            'x-auth-token': authToken2
           },
           body: JSON.stringify({ user_code })
         }),
@@ -41,7 +43,7 @@ const InventoryModule = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': authToken
+            'x-auth-token': authToken3
           },
           body: JSON.stringify({ user_code })
         })
@@ -83,12 +85,17 @@ const InventoryModule = () => {
         body: JSON.stringify({ user_code, ...data })
       });
 
-      if (response.ok) {
-        await fetchData();
-        setShowAddForm(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка сервера');
       }
+
+      await fetchData();
+      return await response.json();
     } catch (error) {
       console.error('Error adding item:', error);
+      alert(`Ошибка: ${error.message}`);
+      throw error;
     }
   };
 
@@ -264,11 +271,32 @@ const InventoryCheckView = ({ data }) => {
 };
 
 const AddForm = ({ type, onAdd, products }) => {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    product_id: '',
+    from_location: '',
+    to_location: '',
+    status: 'В процессе'
+  });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onAdd(type, formData);
+    
+    if (!formData.product_id) {
+      alert('Пожалуйста, выберите товар');
+      return;
+    }
+
+    try {
+      await onAdd(type, formData);
+      setFormData({
+        product_id: '',
+        from_location: '',
+        to_location: '',
+        status: 'В процессе'
+      });
+    } catch (error) {
+      console.error('Ошибка при добавлении:', error);
+    }
   };
 
   const handleChange = (e) => {
@@ -277,6 +305,7 @@ const AddForm = ({ type, onAdd, products }) => {
       [e.target.name]: e.target.value
     });
   };
+
   if (type === 'transfers') {
     return (
       <div className="add-form">
@@ -286,17 +315,19 @@ const AddForm = ({ type, onAdd, products }) => {
             <label>Товар:</label>
             <select 
               name="product_id" 
-              required 
+              required
+              value={formData.product_id}
               onChange={handleChange}
             >
               <option value="">Выберите товар</option>
               {products.map(product => (
                 <option key={product.id} value={product.id}>
-                  {product.name} (ID: {product.id})
+                  {product.name} (ID: {product.id}, Остаток: {product.quantity})
                 </option>
               ))}
             </select>
           </div>
+          
           <div className="form-group">
             <label>Откуда:</label>
             <input 
@@ -304,9 +335,12 @@ const AddForm = ({ type, onAdd, products }) => {
               type="text" 
               name="from_location" 
               required 
+              value={formData.from_location}
               onChange={handleChange}
+              placeholder="Например: Секция А1"
             />
           </div>
+          
           <div className="form-group">
             <label>Куда:</label>
             <input 
@@ -314,59 +348,97 @@ const AddForm = ({ type, onAdd, products }) => {
               type="text" 
               name="to_location" 
               required 
+              value={formData.to_location}
               onChange={handleChange}
+              placeholder="Например: Секция B2"
             />
           </div>
+          
           <div className="form-group">
             <label>Статус:</label>
-            <select name="status" required onChange={handleChange}>
+            <select 
+              name="status" 
+              required 
+              value={formData.status}
+              onChange={handleChange}
+            >
               <option value="В процессе">В процессе</option>
               <option value="Завершено">Завершено</option>
             </select>
           </div>
-          <button type="submit" className="btn-primary">Добавить</button>
+          
+          <button type="submit" className="btn-primary">
+            Добавить перемещение
+          </button>
         </form>
       </div>
     );
   }
 
-  if (type === 'inventory') {
-    return (
-      <div className="add-form">
-        <h3>Добавить инвентаризацию</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Проверено позиций:</label>
-            <input 
-              type="number" 
-              name="items_checked" 
-              required 
-              min="1"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Расхождения:</label>
-            <input 
-              type="number" 
-              name="discrepancies" 
-              required 
-              min="0"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Статус:</label>
-            <select name="status" required onChange={handleChange}>
-              <option value="В процессе">В процессе</option>
-              <option value="Завершено">Завершено</option>
-            </select>
-          </div>
-          <button type="submit" className="btn-primary">Добавить</button>
-        </form>
-      </div>
-    );
-  }
+if (type === 'inventory') {
+  return (
+    <div className="add-form">
+      <h3>Добавить инвентаризацию</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Товар:</label>
+          <select 
+            name="product_id" 
+            required
+            value={formData.product_id || ''}
+            onChange={handleChange}
+          >
+            <option value="">Выберите товар</option>
+            {products.map(product => (
+              <option key={product.id} value={product.id}>
+                {product.name} (ID: {product.id}, Остаток: {product.quantity})
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label>Проверено позиций:</label>
+          <input 
+            type="number" 
+            name="items_checked" 
+            required 
+            min="1"
+            value={formData.items_checked || ''}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Расхождения:</label>
+          <input 
+            type="number" 
+            name="discrepancies" 
+            required 
+            min="0"
+            value={formData.discrepancies || ''}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Статус:</label>
+          <select 
+            name="status" 
+            required 
+            value={formData.status || 'В процессе'}
+            onChange={handleChange}
+          >
+            <option value="В процессе">В процессе</option>
+            <option value="Завершено">Завершено</option>
+          </select>
+        </div>
+        
+        <button type="submit" className="btn-primary">Добавить</button>
+      </form>
+    </div>
+  );
+}
 
   return null;
 };
