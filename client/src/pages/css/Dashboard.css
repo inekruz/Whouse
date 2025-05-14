@@ -851,3 +851,158 @@ tr:hover {
   background-color: var(--ternary-color);
 }
 
+
+/* INVENTORY TAB */
+/* Основные стили модуля */
+.module-container {
+  padding: 1.5rem;
+  background-color: var(--secondary-color);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 2rem;
+}
+
+.module-header {
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.module-navigation {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.module-nav-button {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.module-nav-button:hover {
+  background-color: var(--ternary-color);
+  color: var(--text-color);
+}
+
+.module-nav-button.active {
+  background: var(--button-gradient);
+  color: white;
+  box-shadow: var(--glow-effect);
+}
+
+/* Стили для секций данных */
+.data-section {
+  background-color: var(--primary-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+/* Стили для таблиц */
+.data-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.table-header, .table-row {
+  display: flex;
+  padding: 0.75rem 1rem;
+}
+
+.table-header {
+  background-color: var(--ternary-color);
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.table-row {
+  background-color: var(--secondary-color);
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+.table-row:nth-child(even) {
+  background-color: var(--primary-color);
+}
+
+.table-cell {
+  flex: 1;
+}
+
+/* Стили для карточек */
+.data-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.data-card {
+  background-color: var(--secondary-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header h4 {
+  color: var(--text-color);
+  margin: 0;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+}
+
+/* Стили для статусов */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.status-badge.warning {
+  background-color: var(--warning-color);
+  color: white;
+}
+
+.status-badge.danger {
+  background-color: var(--danger-color);
+  color: white;
+}

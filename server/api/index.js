@@ -8,6 +8,7 @@ const Admin = require('./routes/admin');
 const AdmUsers = require('./routes/admUsers');
 const Product = require('./routes/products');
 const Shipping = require('./routes/shipping');
+const Inventory = require('./routes/inventory');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,6 +25,7 @@ app.use('/adm', Admin);
 app.use('/users', AdmUsers);
 app.use('/prd', Product);
 app.use('/shp', Shipping);
+app.use('/inv', Inventory);
 
 const startServer = () => {
   server.listen(config.port, () => {
