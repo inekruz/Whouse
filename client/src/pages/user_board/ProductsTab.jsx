@@ -16,7 +16,8 @@ const ProductsTab = () => {
     description: '',
     category_id: '',
     quantity: 0,
-    price: 0
+    price: 0,
+    location: ''
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -166,7 +167,8 @@ const ProductsTab = () => {
       description: product.description,
       category_id: product.category_id,
       quantity: product.quantity,
-      price: product.price
+      price: product.price,
+      location: product.location
     });
     setIsModalOpen(true);
   };
@@ -280,6 +282,7 @@ const ProductsTab = () => {
                 <th>Категория</th>
                 <th>Количество</th>
                 <th>Цена</th>
+                <th>Место</th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -294,6 +297,7 @@ const ProductsTab = () => {
                       {product.quantity}
                     </td>
                     <td>{Number(product.price).toFixed(2)}₽</td>
+                    <td>{String(product.location)}</td>
                     <td className="actions-cell">
                       <button 
                         className="btn-edit"
@@ -342,7 +346,8 @@ const ProductsTab = () => {
                     description: '',
                     category_id: '',
                     quantity: 0,
-                    price: 0
+                    price: 0,
+                    location: ''
                   });
                 }}
               >
@@ -356,6 +361,17 @@ const ProductsTab = () => {
                   type="text"
                   name="name"
                   value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Место хранения</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
                   onChange={handleInputChange}
                   required
                 />
@@ -425,7 +441,8 @@ const ProductsTab = () => {
                       description: '',
                       category_id: '',
                       quantity: 0,
-                      price: 0
+                      price: 0,
+                      location: ''
                     });
                   }}
                 >

@@ -17,8 +17,10 @@ const InventoryModule = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const authToken = await sendSecureRequest(user_code);
-        
+        const authToken = sendSecureRequest(user_code);
+        const authToken2 = sendSecureRequest(user_code);
+        const authToken3 = sendSecureRequest(user_code);
+
         // Запрос для получения товаров
         const stockResponse = await fetch(`${BASE_URL}/products`, {
           method: 'POST',
@@ -35,7 +37,7 @@ const InventoryModule = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': authToken
+            'x-auth-token': authToken2
           },
           body: JSON.stringify({ user_code })
         });
@@ -46,7 +48,7 @@ const InventoryModule = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': authToken
+            'x-auth-token': authToken3
           },
           body: JSON.stringify({ user_code })
         });
@@ -107,6 +109,15 @@ const InventoryModule = () => {
 
 // Компонент для отображения остатков товаров
 const StockView = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="data-section">
+        <h3 className="section-title">Текущие остатки</h3>
+        <div className="empty-message">Пусто</div>
+      </div>
+    );
+  }
+
   return (
     <div className="data-section">
       <h3 className="section-title">Текущие остатки</h3>
@@ -130,6 +141,15 @@ const StockView = ({ data }) => {
 
 // Компонент для отображения перемещений товаров
 const TransfersView = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="data-section">
+        <h3 className="section-title">История перемещений</h3>
+        <div className="empty-message">Пусто</div>
+      </div>
+    );
+  }
+
   return (
     <div className="data-section">
       <h3 className="section-title">История перемещений</h3>
@@ -161,6 +181,15 @@ const TransfersView = ({ data }) => {
 
 // Компонент для отображения инвентаризаций
 const InventoryCheckView = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="data-section">
+        <h3 className="section-title">История инвентаризаций</h3>
+        <div className="empty-message">Пусто</div>
+      </div>
+    );
+  }
+
   return (
     <div className="data-section">
       <h3 className="section-title">История инвентаризаций</h3>

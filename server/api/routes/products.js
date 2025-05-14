@@ -17,13 +17,13 @@ router.post('/getAll', validateAuthToken, async (req, res) => {
 
 // Добавление товара
 router.post('/add', validateAuthToken, async (req, res) => {
-  const { name, description, category_id, quantity, price, user_code } = req.body;
+  const { name, description, category_id, quantity, price, location, user_code } = req.body;
 
   try {
     const result = await db.query(
-      `INSERT INTO wh_products (name, description, category_id, quantity, price)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, description, category_id, quantity, price]
+      `INSERT INTO wh_products (name, description, category_id, quantity, price, location)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, description, category_id, quantity, price, location]
     );
     await logAction(user_code, `Добавил товар: ${name} | ${category_id} | ${quantity} | ${price}`);
 
@@ -37,14 +37,14 @@ router.post('/add', validateAuthToken, async (req, res) => {
 // Обновление товара
 router.put('/update/:id', validateAuthToken, async (req, res) => {
   const { id } = req.params;
-  const { name, description, category_id, quantity, price, user_code } = req.body;
+  const { name, description, category_id, quantity, price, location, user_code } = req.body;
 
   try {
     const result = await db.query(
       `UPDATE wh_products
-       SET name = $1, description = $2, category_id = $3, quantity = $4, price = $5
-       WHERE id = $6 RETURNING *`,
-      [name, description, category_id, quantity, price, id]
+       SET name = $1, description = $2, category_id = $3, quantity = $4, price = $5, location = $6
+       WHERE id = $7 RETURNING *`,
+      [name, description, category_id, quantity, price, location, id]
     );
 
     if (result.rowCount === 0) {
