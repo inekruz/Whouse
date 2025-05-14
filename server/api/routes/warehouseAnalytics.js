@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthTokenAdmin');
 const WarehouseMathService = require('./middleware/warehouseMathService');
-const WarehouseMath = require('./middleware/warehouseMathService');
+
 
 // Обновление всех моделей (можно вызывать по расписанию или вручную)
 router.post('/update-models', validateAuthToken, async (req, res) => {
@@ -87,12 +87,15 @@ router.post('/kpi/:productId', validateAuthToken, async (req, res) => {
 router.post('/transfer-stats', validateAuthToken, async (req, res) => {
     try {
         const transfers = await db.query(`
-            SELECT product_id, from_location as "from", to_location as "to", transfer_date as date
-            FROM wh_transfers
-            WHERE transfer_date > CURRENT_DATE - INTERVAL '90 days'
+        SELECT t.product_id, p.name as product_name, 
+                t.from_location as "from", t.to_location as "to", 
+                t.transfer_date as date
+        FROM wh_transfers t
+        LEFT JOIN wh_products p ON t.product_id = p.id
+        WHERE t.transfer_date > CURRENT_DATE - INTERVAL '90 days'
         `);
-        
-        const stats = WarehouseMath.analyzeTransfers(transfers.rows);
+                
+        const stats = WarehouseMathService.analyzeTransfers(transfers.rows);
         res.json(stats);
     } catch (error) {
         console.error('Error analyzing transfers:', error);

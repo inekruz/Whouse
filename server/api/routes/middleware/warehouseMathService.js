@@ -152,6 +152,45 @@ class WarehouseMathService {
             return { success: false, message: 'Failed to update models', error: error.message };
         }
     }
+  static analyzeTransfers(transfers) {
+    if (!transfers || transfers.length === 0) {
+      return {
+        totalTransfers: 0,
+        avgPerDay: 0,
+        mostActiveProduct: null
+      };
+    }
+
+    // Группируем по продуктам
+    const byProduct = transfers.reduce((acc, transfer) => {
+      if (!acc[transfer.product_id]) {
+        acc[transfer.product_id] = {
+          count: 0,
+          name: transfer.product_name || `Product ${transfer.product_id}`
+        };
+      }
+      acc[transfer.product_id].count++;
+      return acc;
+    }, {});
+
+    // Находим самый активный продукт
+    const mostActive = Object.entries(byProduct)
+      .map(([id, data]) => ({ id, ...data }))
+      .sort((a, b) => b.count - a.count)[0];
+
+    // Рассчитываем среднее количество в день (за 90 дней)
+    const days = 90;
+    const total = transfers.length;
+    const avgPerDay = total / days;
+
+    return {
+      totalTransfers: total,
+      avgPerDay: avgPerDay,
+      mostActiveProduct: mostActive,
+      byProduct: byProduct
+    };
+  }
 }
+
 
 module.exports = WarehouseMathService;

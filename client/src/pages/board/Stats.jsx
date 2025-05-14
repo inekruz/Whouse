@@ -85,12 +85,15 @@ const Stats = () => {
     );
   };
 
-  const renderTransferStats = () => {
-    if (!transferStats) return null;
-    
-    return (
-      <div className="transfer-stats">
-        <h3>Анализ перемещений (90 дней)</h3>
+const renderTransferStats = () => {
+  if (!transferStats) return <p>Данные о перемещениях не загружены</p>;
+  
+  return (
+    <div className="transfer-stats">
+      <h3>Анализ перемещений (90 дней)</h3>
+      {transferStats.totalTransfers === 0 ? (
+        <p>Нет данных о перемещениях за последние 90 дней</p>
+      ) : (
         <div className="transfer-grid">
           <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
             <h4>Всего перемещений</h4>
@@ -112,9 +115,10 @@ const Stats = () => {
             <p>Перемещений: {transferStats.mostActiveProduct?.count || 0}</p>
           </div>
         </div>
-      </div>
-    );
-  };
+      )}
+    </div>
+  );
+};
 
   return (
     <div className="tab-content">
