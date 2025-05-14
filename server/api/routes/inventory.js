@@ -65,14 +65,14 @@ router.post('/inventory-checks', validateAuthToken, async (req, res) => {
 // Добавление перемещения
 router.post('/transfers/add', validateAuthToken, async (req, res) => {
   try {
-    const { user_code, product_id, product_name, from_location, to_location, status } = req.body;
+    const { user_code, id, name, from_location, to_location, status } = req.body;
     
     const result = await db.query(
       `INSERT INTO wh_transfers 
        (user_code, product_id, product_name, from_location, to_location, transfer_date, status)
        VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6)
        RETURNING *`,
-      [user_code, product_id, product_name, from_location, to_location, status]
+      [user_code, id, name, from_location, to_location, status]
     );
     
     res.status(201).json(result.rows[0]);
