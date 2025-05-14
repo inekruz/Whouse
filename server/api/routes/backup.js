@@ -2,71 +2,49 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthTokenAdmin');
-const { Transform } = require('stream');
+const { stringify } = require('csv-stringify/sync');
 
 router.post('/backup', validateAuthToken, async (req, res) => {
   const { tableName } = req.body;
 
-  if (!tableName || !tableName.startsWith('wh_')) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid table name. Table name must start with wh_'
+  // Проверка что название таблицы начинается с wh_
+  if (!tableName.startsWith('wh_')) {
+    return res.status(400).json({ 
+      error: 'Invalid table name', 
+      message: 'Table name must start with wh_' 
     });
   }
 
-  let client;
   try {
-    client = await db.connect();
-    
-    // Проверяем существование таблицы
-    const tableExists = await client.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = $1
-      )
-    `, [tableName]);
+    // Получаем данные из таблицы
+    const query = `SELECT * FROM ${tableName}`;
+    const { rows } = await db.query(query);
 
-    if (!tableExists.rows[0].exists) {
-      return res.status(404).json({
-        success: false,
-        message: `Table ${tableName} not found`
+    if (rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'Table is empty' 
       });
     }
 
-    // Устанавливаем заголовки для скачивания CSV
+    // Конвертируем в CSV
+    const csv = stringify(rows, {
+      header: true,
+      columns: Object.keys(rows[0])
+    });
+
+    // Устанавливаем заголовки для скачивания файла
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=${tableName}_backup_${new Date().toISOString().slice(0,10)}.csv`);
-
-    // Используем режим потоковой передачи
-    const stream = client.query(
-      new (require('pg').Query)(`COPY (SELECT * FROM ${tableName}) TO STDOUT WITH CSV HEADER`)
-    );
-
-    stream.on('error', (err) => {
-      console.error('Ошибка потока базы данных:', err);
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          message: 'Error generating CSV backup'
-        });
-      }
-      client.release();
-    });
-
-    stream.pipe(res).on('finish', () => {
-      client.release();
-    });
+    res.setHeader('Content-Disposition', `attachment; filename=${tableName}_backup.csv`);
+    
+    // Отправляем CSV
+    return res.send(csv);
 
   } catch (error) {
-    console.error('Ошибка во время резервного копирования таблицы:', error);
-    if (client) client.release();
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error during backup'
-      });
-    }
+    console.error('Backup error:', error);
+    return res.status(500).json({ 
+      error: 'Backup failed', 
+      message: error.message 
+    });
   }
 });
 
