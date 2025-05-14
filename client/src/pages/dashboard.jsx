@@ -11,10 +11,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>Управление складом</h1>
-      </div>
-      
       <div className="tabs-container">
         <div className="tabs">
           <button 

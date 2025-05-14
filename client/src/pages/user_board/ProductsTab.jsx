@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { sendSecureRequest } from '../../components/SecureToken';
 import '../css/Dashboard.css';
 
+const BASE_URL = 'https://api.whous.ru/prd';
 const ProductsTab = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -41,7 +42,7 @@ const ProductsTab = () => {
 
   const fetchProducts = async (userCode, authToken) => {
     try {
-      const res = await fetch('https://api.whous.ru/prd/getAll', {
+      const res = await fetch(`${BASE_URL}/getAll`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +62,7 @@ const ProductsTab = () => {
 
   const fetchCategories = async (userCode, authToken) => {
     try {
-      const res = await fetch('https://api.whous.ru/prd/ctg/getAll', {
+      const res = await fetch(`${BASE_URL}/ctg/getAll`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ const ProductsTab = () => {
   const addProduct = async () => {
     try {
       const token = sendSecureRequest(code);
-      const res = await fetch('https://api.whous.ru/prd/add', {
+      const res = await fetch(`${BASE_URL}/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +100,7 @@ const ProductsTab = () => {
   const updateProduct = async (id) => {
     try {
       const token = sendSecureRequest(code);
-      const res = await fetch(`https://api.whous.ru/prd/update/${id}`, {
+      const res = await fetch(`${BASE_URL}/update/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ const ProductsTab = () => {
   const deleteProduct = async (id) => {
     try {
       const token = sendSecureRequest(code);
-      const res = await fetch(`https://api.whous.ru/prd/delete/${id}`, {
+      const res = await fetch(`${BASE_URL}/delete/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +293,7 @@ const ProductsTab = () => {
                     <td className={product.quantity < 10 ? 'low-stock' : ''}>
                       {product.quantity}
                     </td>
-                    <td>${Number(product.price).toFixed(2)}</td>
+                    <td>{Number(product.price).toFixed(2)}₽</td>
                     <td className="actions-cell">
                       <button 
                         className="btn-edit"
