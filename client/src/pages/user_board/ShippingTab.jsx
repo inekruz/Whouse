@@ -32,30 +32,36 @@ const ShippingTab = () => {
         
         // Загрузка товаров
         const productsResponse = await fetch(`${API_BASE_URL}products`, {
+          method: 'POST',
           headers: {
             'x-auth-token': token,
             'Content-Type': 'application/json'
-          }
+          },
+          body: user_code
         });
         const productsData = await productsResponse.json();
         setProducts(productsData);
         
         // Загрузка категорий
         const categoriesResponse = await fetch(`${API_BASE_URL}categories`, {
+          method: 'POST',
           headers: {
             'x-auth-token': token,
             'Content-Type': 'application/json'
-          }
+          },
+          body: user_code
         });
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
         
         // Загрузка партий
         const batchesResponse = await fetch(`${API_BASE_URL}batches`, {
+          method: 'POST',
           headers: {
             'x-auth-token': token,
             'Content-Type': 'application/json'
-          }
+          }, 
+          body: user_code
         });
         const batchesData = await batchesResponse.json();
         setBatches(batchesData);

@@ -5,7 +5,7 @@ const validateAuthToken = require('./middleware/validateAuthToken');
 const { logAction } = require('./middleware/actionLogger');
 
 // Получение списка товаров
-router.get('/products', validateAuthToken, async (req, res) => {
+router.post('/products', validateAuthToken, async (req, res) => {
   try {
     const result = await db.query(`
       SELECT p.id, p.name, p.description, p.quantity, p.price, 
@@ -21,7 +21,7 @@ router.get('/products', validateAuthToken, async (req, res) => {
 });
 
 // Получение списка категорий
-router.get('/categories', validateAuthToken, async (req, res) => {
+router.post('/categories', validateAuthToken, async (req, res) => {
   try {
     const result = await db.query('SELECT id, name FROM wh_categories');
     res.json(result.rows);
@@ -32,7 +32,7 @@ router.get('/categories', validateAuthToken, async (req, res) => {
 });
 
 // Получение списка партий
-router.get('/batches', validateAuthToken, async (req, res) => {
+router.post('/batches', validateAuthToken, async (req, res) => {
   try {
     const result = await db.query(`
       SELECT b.id, b.product_id, b.batch_number, b.quantity, 
