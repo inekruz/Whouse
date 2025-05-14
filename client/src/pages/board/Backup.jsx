@@ -1,102 +1,137 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { FiDatabase, FiDownload } from 'react-icons/fi';
+import { sendSecureRequest } from '../../components/SecureToken';
+import { useState, useEffect } from 'react';
 import './css/Backup.css';
 
-const Backup = ({ token }) => {
+const Backup = () => {
+  const adminCode = localStorage.getItem('adminCode');
+  const token = sendSecureRequest(adminCode);
   const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [adminCode, setAdminCode] = useState('');
+
+  useEffect(() => {
+    fetchTables();
+  }, []);
 
   const fetchTables = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const response = await axios.post('https://api.whous.ru/bcp/get', { adminCode }, {
+      setLoading(true);
+      const response = await fetch('https://api.whous.ru/bcp/get', {
+        method: 'POST',
         headers: {
-          'x-auth-token': token,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify({ adminCode })
       });
-      setTables(response.data.tables);
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch tables');
+      }
+
+      setTables(data.tables || []);
+      setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при запросе');
+      console.error('Error fetching tables:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBackup = async (tableName) => {
+  const downloadTable = async (tableName) => {
     try {
-      const response = await axios.post('https://api.whous.ru/bcp/backup', { 
-        tableName,
-        adminCode 
-      }, {
+      const response = await fetch('https://api.whous.ru/bcp/backup', {
+        method: 'POST',
         headers: {
-          'x-auth-token': token,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-auth-token': token
         },
-        responseType: 'blob' // Важно для получения файла
+        body: JSON.stringify({ 
+          tableName,
+          adminCode 
+        })
       });
 
-      // Создаем ссылку для скачивания
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${tableName}_backup_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download table');
+      }
+
+      // Получаем имя файла из заголовков или генерируем
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `${tableName}_backup.csv`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename=(.+)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Создаем blob и скачиваем файл
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Ошибка при скачивании:', err);
-      alert(err.response?.data?.message || 'Ошибка при скачивании');
+      console.error('Error downloading table:', err);
+      setError(err.message);
     }
   };
 
-  useEffect(() => {
-    if (token && adminCode) {
-      fetchTables();
-    }
-  }, [token, adminCode]);
-
   return (
-    <div className="tables-backup-container">
-      <div className="admin-code-input">
-        <input
-          type="password"
-          value={adminCode}
-          onChange={(e) => setAdminCode(e.target.value)}
-          placeholder="Enter admin code"
-          className="code-input"
-        />
-        <button 
-          onClick={fetchTables}
-          disabled={!adminCode || loading}
-          className="refresh-button"
-        >
-          {loading ? 'Загрузка...' : 'Попробуйте заново'}
-        </button>
+    <div className="tab-content">
+      <div className="content-header">
+        <FiDatabase className="header-tab-icon" />
+        <h2>Резервное копирование</h2>
       </div>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <div className="tables-grid">
-        {tables.map((table) => (
-          <div key={table} className="table-card">
-            <div className="table-name">{table}</div>
-            <button
-              onClick={() => handleBackup(table)}
-              className="download-button"
-            >
-              Скачать в CSV
-            </button>
-          </div>
-        ))}
+      
+      <div className="content-card">
+        <div className="backup-container">
+          {loading ? (
+            <div className="loading-spinner">Загрузка списка таблиц...</div>
+          ) : error ? (
+            <div className="error-message">
+              Ошибка при загрузке таблиц: {error}
+              <button 
+                onClick={fetchTables}
+                className="retry-button"
+              >
+                Повторить попытку
+              </button>
+            </div>
+          ) : tables.length === 0 ? (
+            <p>Нет доступных таблиц для резервного копирования</p>
+          ) : (
+            <div className="tables-grid">
+              {tables.map((table) => (
+                <div key={table} className="table-card">
+                  <div className="table-info">
+                    <FiDatabase className="table-icon" />
+                    <span className="table-name">{table}</span>
+                  </div>
+                  <button
+                    onClick={() => downloadTable(table)}
+                    className="download-button"
+                  >
+                    <FiDownload className="download-icon" />
+                    Скачать
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-
-      {tables.length === 0 && !loading && (
-        <div className="no-tables">Таблицы не найдены :(</div>
-      )}
     </div>
   );
 };
