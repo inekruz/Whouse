@@ -62,4 +62,44 @@ router.post('/inventory-checks', validateAuthToken, async (req, res) => {
   }
 });
 
+// Добавление перемещения
+router.post('/transfers/add', validateAuthToken, async (req, res) => {
+  try {
+    const { user_code, product_id, product_name, from_location, to_location, status } = req.body;
+    
+    const result = await db.query(
+      `INSERT INTO wh_transfers 
+       (user_code, product_id, product_name, from_location, to_location, transfer_date, status)
+       VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6)
+       RETURNING *`,
+      [user_code, product_id, product_name, from_location, to_location, status]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding transfer:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Добавление инвентаризации
+router.post('/inventory-checks/add', validateAuthToken, async (req, res) => {
+  try {
+    const { user_code, items_checked, discrepancies, status } = req.body;
+    
+    const result = await db.query(
+      `INSERT INTO wh_inventory_checks 
+       (user_code, check_date, items_checked, discrepancies, status)
+       VALUES ($1, CURRENT_DATE, $2, $3, $4)
+       RETURNING *`,
+      [user_code, items_checked, discrepancies, status]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding inventory check:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

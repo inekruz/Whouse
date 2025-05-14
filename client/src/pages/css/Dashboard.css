@@ -1006,3 +1006,7 @@ tr:hover {
   background-color: var(--danger-color);
   color: white;
 }
+
+#input-for {
+  width: 97%;
+}

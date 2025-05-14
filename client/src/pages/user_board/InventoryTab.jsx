@@ -13,61 +13,84 @@ const InventoryModule = () => {
   });
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('stock');
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const authToken = sendSecureRequest(user_code);
-        const authToken2 = sendSecureRequest(user_code);
-        const authToken3 = sendSecureRequest(user_code);
-
-        // Запрос для получения товаров
-        const stockResponse = await fetch(`${BASE_URL}/products`, {
+  // Функция для загрузки данных
+  const fetchData = async () => {
+    try {
+      const authToken = await sendSecureRequest(user_code);
+      
+      const [stockResponse, transfersResponse, inventoryResponse] = await Promise.all([
+        fetch(`${BASE_URL}/products`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-auth-token': authToken
           },
           body: JSON.stringify({ user_code })
-        });
-        const stockData = await stockResponse.json();
-        
-        // Запрос для получения перемещений
-        const transfersResponse = await fetch(`${BASE_URL}/transfers`, {
+        }),
+        fetch(`${BASE_URL}/transfers`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': authToken2
+            'x-auth-token': authToken
           },
           body: JSON.stringify({ user_code })
-        });
-        const transfersData = await transfersResponse.json();
-        
-        // Запрос для получения инвентаризаций
-        const inventoryResponse = await fetch(`${BASE_URL}/inventory-checks`, {
+        }),
+        fetch(`${BASE_URL}/inventory-checks`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-auth-token': authToken3
+            'x-auth-token': authToken
           },
           body: JSON.stringify({ user_code })
-        });
-        const inventoryData = await inventoryResponse.json();
+        })
+      ]);
 
-        setInventoryData({
-          stock: stockData,
-          transfers: transfersData,
-          inventoryChecks: inventoryData
-        });
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching inventory data:', error);
-        setLoading(false);
-      }
-    };
+      const [stockData, transfersData, inventoryData] = await Promise.all([
+        stockResponse.json(),
+        transfersResponse.json(),
+        inventoryResponse.json()
+      ]);
 
+      setInventoryData({
+        stock: stockData,
+        transfers: transfersData,
+        inventoryChecks: inventoryData
+      });
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching inventory data:', error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  // Функция для добавления нового элемента
+  const handleAddItem = async (type, data) => {
+    try {
+      const authToken = await sendSecureRequest(user_code);
+      
+      const response = await fetch(`${BASE_URL}/${type}/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': authToken
+        },
+        body: JSON.stringify({ user_code, ...data })
+      });
+
+      if (response.ok) {
+        await fetchData(); // Обновляем данные после добавления
+        setShowAddForm(false);
+      }
+    } catch (error) {
+      console.error('Error adding item:', error);
+    }
+  };
 
   if (loading) {
     return <div className="tab-content">Загрузка данных...</div>;
@@ -80,25 +103,42 @@ const InventoryModule = () => {
       <div className="module-navigation">
         <button 
           className={`module-nav-button ${activeView === 'stock' ? 'active' : ''}`}
-          onClick={() => setActiveView('stock')}
+          onClick={() => { setActiveView('stock'); setShowAddForm(false); }}
         >
           Остатки товаров
         </button>
         <button 
           className={`module-nav-button ${activeView === 'transfers' ? 'active' : ''}`}
-          onClick={() => setActiveView('transfers')}
+          onClick={() => { setActiveView('transfers'); setShowAddForm(false); }}
         >
           Перемещение товаров
         </button>
         <button 
           className={`module-nav-button ${activeView === 'inventory' ? 'active' : ''}`}
-          onClick={() => setActiveView('inventory')}
+          onClick={() => { setActiveView('inventory'); setShowAddForm(false); }}
         >
           Инвентаризация
         </button>
       </div>
       
+      <div className="module-actions">
+        <button 
+          className="btn-primary"
+          onClick={() => setShowAddForm(!showAddForm)}
+        >
+          {showAddForm ? 'Отменить' : 'Добавить'}
+        </button>
+      </div>
+      
       <div className="module-content">
+        {showAddForm && (
+          <AddForm 
+            type={activeView} 
+            onAdd={handleAddItem} 
+            products={inventoryData.stock}
+          />
+        )}
+        
         {activeView === 'stock' && <StockView data={inventoryData.stock} />}
         {activeView === 'transfers' && <TransfersView data={inventoryData.transfers} />}
         {activeView === 'inventory' && <InventoryCheckView data={inventoryData.inventoryChecks} />}
@@ -221,6 +261,114 @@ const InventoryCheckView = ({ data }) => {
       </div>
     </div>
   );
+};
+
+const AddForm = ({ type, onAdd, products }) => {
+  const [formData, setFormData] = useState({});
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd(type, formData);
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+  if (type === 'transfers') {
+    return (
+      <div className="add-form">
+        <h3>Добавить перемещение</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Товар:</label>
+            <select 
+              name="product_id" 
+              required 
+              onChange={handleChange}
+            >
+              <option value="">Выберите товар</option>
+              {products.map(product => (
+                <option key={product.id} value={product.id}>
+                  {product.name} (ID: {product.id})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Откуда:</label>
+            <input 
+              id='input-for'
+              type="text" 
+              name="from_location" 
+              required 
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Куда:</label>
+            <input 
+              id='input-for'
+              type="text" 
+              name="to_location" 
+              required 
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Статус:</label>
+            <select name="status" required onChange={handleChange}>
+              <option value="В процессе">В процессе</option>
+              <option value="Завершено">Завершено</option>
+            </select>
+          </div>
+          <button type="submit" className="btn-primary">Добавить</button>
+        </form>
+      </div>
+    );
+  }
+
+  if (type === 'inventory') {
+    return (
+      <div className="add-form">
+        <h3>Добавить инвентаризацию</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Проверено позиций:</label>
+            <input 
+              type="number" 
+              name="items_checked" 
+              required 
+              min="1"
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Расхождения:</label>
+            <input 
+              type="number" 
+              name="discrepancies" 
+              required 
+              min="0"
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Статус:</label>
+            <select name="status" required onChange={handleChange}>
+              <option value="В процессе">В процессе</option>
+              <option value="Завершено">Завершено</option>
+            </select>
+          </div>
+          <button type="submit" className="btn-primary">Добавить</button>
+        </form>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default InventoryModule;
