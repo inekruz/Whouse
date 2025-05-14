@@ -62,25 +62,46 @@ router.post('/inventory-checks', validateAuthToken, async (req, res) => {
   }
 });
 
-// Добавление перемещения
+// Добавление перемещения (сервер сам получает название товара)
 router.post('/transfers/add', validateAuthToken, async (req, res) => {
   try {
-    const { user_code, id, name, from_location, to_location, status } = req.body;
+    const { user_code, product_id, from_location, to_location, status } = req.body;
     
-    console.log(`${user_code} |${id} |${name} |${from_location} |${to_location} |${status} |`);
-    
-    const result = await db.query(
+    // 1. Проверяем наличие обязательных полей
+    if (!product_id) {
+      return res.status(400).json({ error: 'ID товара обязательно' });
+    }
+
+    // 2. Получаем информацию о товаре из базы данных
+    const productQuery = await db.query(
+      `SELECT name FROM wh_products 
+       WHERE id = $1`,
+      [product_id]
+    );
+
+    if (productQuery.rows.length === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+
+    const product_name = productQuery.rows[0].name;
+
+    // 3. Добавляем запись о перемещении
+    const transferQuery = await db.query(
       `INSERT INTO wh_transfers 
        (user_code, product_id, product_name, from_location, to_location, transfer_date, status)
        VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6)
        RETURNING *`,
-      [user_code, id, name, from_location, to_location, status]
+      [user_code, product_id, product_name, from_location, to_location, status]
     );
     
-    res.status(201).json(result.rows[0]);
+    // 4. Возвращаем созданную запись
+    res.status(201).json(transferQuery.rows[0]);
   } catch (error) {
     console.error('Error adding transfer:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 });
 
