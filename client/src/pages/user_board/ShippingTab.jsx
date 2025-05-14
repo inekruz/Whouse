@@ -294,6 +294,23 @@ const updateBatch = async (updatedData) => {
   }
 };
 
+const handleAddSerialNumbers = () => {
+  const rawInput = formData.serialNumbers;
+
+  if (typeof rawInput !== 'string' || rawInput.trim() === '') {
+    showMsg('Пожалуйста, заполните серийные номера.', 'error');
+    return;
+  }
+
+  const serials = rawInput.split('\n').filter(sn => sn.trim() !== '');
+
+  setFormData(prev => ({
+    ...prev,
+    serialNumbers: serials
+  }));
+};
+
+
 return (
   <div className="tab-content">
     <Notification />
@@ -369,6 +386,25 @@ return (
                   placeholder="BATCH-001-2023"
                 />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="serialNumbers">Серийные номера (по одному на строку)</label>
+              <textarea 
+                id="serialNumbers" 
+                name="serialNumbers" 
+                rows="3"
+                value={formData.serialNumbers}
+                onChange={handleInputChange}
+                placeholder="SN-12345678\nSN-87654321"
+              />
+              <button 
+                type="button" 
+                className="secondary-button"
+                onClick={handleAddSerialNumbers}
+              >
+                Подтвердить серийные номера
+              </button>
             </div>
 
             <div className="form-row">
