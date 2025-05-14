@@ -52,7 +52,7 @@ router.post('/batches', validateAuthToken, async (req, res) => {
 
 // Приемка товара
 router.post('/receive', validateAuthToken, async (req, res) => {
-  const { productId, quantity, batchNumber, serialNumbers, supplier, invoiceNumber, user_code } = req.body;
+  const { productId, quantity, batchNumber, supplier, invoiceNumber, user_code } = req.body;
   
   try {
     await db.query('BEGIN');
@@ -61,9 +61,9 @@ router.post('/receive', validateAuthToken, async (req, res) => {
     const batchResult = await db.query(
       `INSERT INTO wh_batches 
        (product_id, batch_number, quantity, received_date, supplier, invoice_number, serial_numbers)
-       VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6)
+       VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $5)
        RETURNING *`,
-      [productId, batchNumber, quantity, supplier, invoiceNumber, serialNumbers]
+      [productId, batchNumber, quantity, supplier, invoiceNumber]
     );
     
     // 2. Обновляем количество товара
