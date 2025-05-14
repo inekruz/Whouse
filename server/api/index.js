@@ -28,7 +28,7 @@ app.use('/users', AdmUsers);
 app.use('/prd', Product);
 app.use('/shp', Shipping);
 app.use('/inv', Inventory);
-app.use('/math/analytics', warehouseAnalytics);
+app.use('/math', warehouseAnalytics);
 
 const startServer = () => {
   server.listen(config.port, () => {

@@ -1,0 +1,95 @@
+.stats-container {
+  padding: 1.5rem;
+}
+
+.loading-text {
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.error-text {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.stats-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tab-button:hover {
+  opacity: 0.9;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.stats-category {
+  background-color: var(--secondary-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.stats-table {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.stats-table-header {
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
+.stats-table-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 0.25rem 0;
+}
+
+.transfer-stats {
+  margin-top: 1rem;
+}
+
+.transfer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.transfer-card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.transfer-card h4 {
+  margin-top: 0;
+  color: var(--text-secondary);
+}
+
+.transfer-card p {
+  margin-bottom: 0;
+}
