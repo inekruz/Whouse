@@ -12,6 +12,7 @@ const Shipping = require('./routes/shipping');
 const Inventory = require('./routes/inventory');
 const warehouseAnalytics = require('./routes/warehouseAnalytics');
 const History = require('./routes/history');
+const Backup = require('./routes/backup');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +32,7 @@ app.use('/shp', Shipping);
 app.use('/inv', Inventory);
 app.use('/math', warehouseAnalytics);
 app.use('/history', History);
+app.use('/bcp', Backup);
 
 const startServer = () => {
   server.listen(config.port, () => {
