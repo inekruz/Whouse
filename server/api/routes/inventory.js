@@ -67,6 +67,8 @@ router.post('/transfers/add', validateAuthToken, async (req, res) => {
   try {
     const { user_code, id, name, from_location, to_location, status } = req.body;
     
+    console.log(`${user_code} |${id} |${name} |${from_location} |${to_location} |${status} |`);
+    
     const result = await db.query(
       `INSERT INTO wh_transfers 
        (user_code, product_id, product_name, from_location, to_location, transfer_date, status)

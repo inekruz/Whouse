@@ -84,7 +84,7 @@ const InventoryModule = () => {
       });
 
       if (response.ok) {
-        await fetchData(); // Обновляем данные после добавления
+        await fetchData();
         setShowAddForm(false);
       }
     } catch (error) {
