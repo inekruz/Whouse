@@ -44,9 +44,10 @@ router.post('/backup', validateAuthToken, async (req, res) => {
     });
 
     // Получаем данные из таблицы и конвертируем в CSV
-    const queryStream = db.query(new db.Query(`
+    // Исправленная строка - убрали new db.Query()
+    const queryStream = db.query(`
       COPY (SELECT * FROM ${tableName}) TO STDOUT WITH CSV HEADER
-    `));
+    `);
 
     // Отправляем данные клиенту
     queryStream.pipe(csvTransform).pipe(res);
