@@ -2,6 +2,38 @@ const db = require('../../../db');
 const WarehouseMath = require('./warehouseMath');
 
 class WarehouseMathService {
+
+    static async checkTablesExist() {
+    const requiredTables = [
+        'wh_products', 
+        'wh_abc_analysis',
+        'wh_inventory_forecasts',
+        'wh_inventory_history',
+        'wh_transfers',
+        'wh_product_kpis'
+    ];
+    
+    const missingTables = [];
+    
+    for (const table of requiredTables) {
+        const res = await db.query(
+            `SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = $1
+            )`,
+            [table]
+        );
+        
+        if (!res.rows[0].exists) {
+            missingTables.push(table);
+        }
+    }
+    
+    if (missingTables.length > 0) {
+        throw new Error(`Missing tables: ${missingTables.join(', ')}`);
+    }
+}
+
     // Обновляет ABC-анализ для всех товаров
     static async updateABCAnalysis() {
         try {
@@ -39,11 +71,39 @@ class WarehouseMathService {
     }
 
     // Обновляет прогнозы остатков для всех товаров
-    static async updateInventoryForecasts(days = 7) {
-        try {
-            // Получаем все товары
-            const products = await db.query('SELECT id FROM wh_products');
-            
+static async updateInventoryForecasts(days = 7) {
+    try {
+        // Проверяем существование таблицы истории
+        const historyExists = await db.query(
+            `SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'wh_inventory_history'
+            )`
+        );
+        
+        if (!historyExists.rows[0].exists) {
+            console.warn('wh_inventory_history table does not exist, skipping forecasts');
+            return;
+        }
+        
+        const products = await db.query('SELECT id FROM wh_products');
+        
+        if (!products.rows.length) {
+            console.warn('No products found, skipping forecasts');
+            return;
+        }
+        
+        // Создаем таблицу прогнозов если её нет
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS wh_inventory_forecasts (
+                id SERIAL PRIMARY KEY,
+                product_id INTEGER NOT NULL REFERENCES wh_products(id),
+                forecast_date DATE NOT NULL,
+                predicted_quantity NUMERIC NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(product_id, forecast_date)
+        `);
+        
             // Удаляем старые прогнозы
             await db.query('DELETE FROM wh_inventory_forecasts');
             
@@ -142,16 +202,38 @@ class WarehouseMathService {
     }
 
     // Обновляет все математические модели
-    static async updateAllModels() {
-        try {
-            await this.updateABCAnalysis();
-            await this.updateInventoryForecasts();
-            await this.updateProductKPIs();
-            return { success: true, message: 'All models updated successfully' };
-        } catch (error) {
-            return { success: false, message: 'Failed to update models', error: error.message };
+static async updateAllModels() {
+    try {
+        await this.checkTablesExist();
+        
+        const results = await Promise.allSettled([
+            this.updateABCAnalysis().catch(e => ({ status: 'rejected', reason: e })),
+            this.updateInventoryForecasts().catch(e => ({ status: 'rejected', reason: e })),
+            this.updateProductKPIs().catch(e => ({ status: 'rejected', reason: e }))
+        ]);
+        
+        const errors = results.filter(r => r.status === 'rejected');
+        
+        if (errors.length > 0) {
+            const errorMessages = errors.map(e => e.reason.message).join('; ');
+            return {
+                success: false,
+                message: `Failed to update ${errors.length} models: ${errorMessages}`
+            };
         }
+        
+        return { 
+            success: true, 
+            message: 'All models updated successfully' 
+        };
+    } catch (error) {
+        return { 
+            success: false, 
+            message: 'Failed to update models',
+            error: error.message 
+        };
     }
+}
   static analyzeTransfers(transfers) {
     if (!transfers || transfers.length === 0) {
       return {
