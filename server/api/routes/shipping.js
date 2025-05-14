@@ -61,7 +61,7 @@ router.post('/receive', validateAuthToken, async (req, res) => {
     const batchResult = await db.query(
       `INSERT INTO wh_batches 
        (product_id, batch_number, quantity, received_date, supplier, invoice_number, serial_numbers)
-       VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $5)
+       VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, 1)
        RETURNING *`,
       [productId, batchNumber, quantity, supplier, invoiceNumber]
     );
