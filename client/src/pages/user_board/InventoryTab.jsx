@@ -400,6 +400,7 @@ if (type === 'inventory') {
         <div className="form-group">
           <label>Проверено позиций:</label>
           <input 
+          id='input-for'
             type="number" 
             name="items_checked" 
             required 
@@ -412,6 +413,7 @@ if (type === 'inventory') {
         <div className="form-group">
           <label>Расхождения:</label>
           <input 
+          id='input-for'
             type="number" 
             name="discrepancies" 
             required 

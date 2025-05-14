@@ -94,6 +94,7 @@ router.post('/transfers/add', validateAuthToken, async (req, res) => {
       [user_code, product_id, product_name, from_location, to_location, status]
     );
     
+    await logAction(user_code, `Добавил Перемещение товара: ${product_id} | ${product_name}`);
     // 4. Возвращаем созданную запись
     res.status(201).json(transferQuery.rows[0]);
   } catch (error) {
@@ -118,6 +119,7 @@ router.post('/inventory/add', validateAuthToken, async (req, res) => {
       [user_code, items_checked, discrepancies, status]
     );
     
+    await logAction(user_code, `Добавил Инвентаризацию из [${items_checked}] в [${discrepancies}]`);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error adding inventory check:', error);
