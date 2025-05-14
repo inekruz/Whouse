@@ -24,56 +24,56 @@ const ShippingTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBatch, setSelectedBatch] = useState(null);
 
-  // Загрузка данных с сервера
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = sendSecureRequest(user_code);
-        
-        // Загрузка товаров
-        const productsResponse = await fetch(`${API_BASE_URL}products`, {
-          method: 'POST',
-          headers: {
-            'x-auth-token': token,
-            'Content-Type': 'application/json'
-          },
-          body: user_code
-        });
-        const productsData = await productsResponse.json();
-        setProducts(productsData);
-        
-        // Загрузка категорий
-        const categoriesResponse = await fetch(`${API_BASE_URL}categories`, {
-          method: 'POST',
-          headers: {
-            'x-auth-token': token,
-            'Content-Type': 'application/json'
-          },
-          body: user_code
-        });
-        const categoriesData = await categoriesResponse.json();
-        setCategories(categoriesData);
-        
-        // Загрузка партий
-        const batchesResponse = await fetch(`${API_BASE_URL}batches`, {
-          method: 'POST',
-          headers: {
-            'x-auth-token': token,
-            'Content-Type': 'application/json'
-          }, 
-          body: user_code
-        });
-        const batchesData = await batchesResponse.json();
-        setBatches(batchesData);
-        
-      } catch (error) {
-        showMsg('Ошибка загрузки данных', 'error');
-        console.error('Error fetching data:', error);
-      }
-    };
-    
-    fetchData();
-  }, []);
+// Загрузка данных с сервера
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = sendSecureRequest(user_code);
+      
+      // Загрузка товаров
+      const productsResponse = await fetch(`${API_BASE_URL}products`, {
+        method: 'POST', // Изменил на POST чтобы можно было передать body
+        headers: {
+          'x-auth-token': token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_code })
+      });
+      const productsData = await productsResponse.json();
+      setProducts(productsData);
+      
+      // Загрузка категорий
+      const categoriesResponse = await fetch(`${API_BASE_URL}categories`, {
+        method: 'POST',
+        headers: {
+          'x-auth-token': token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_code })
+      });
+      const categoriesData = await categoriesResponse.json();
+      setCategories(categoriesData);
+      
+      // Загрузка партий
+      const batchesResponse = await fetch(`${API_BASE_URL}batches`, {
+        method: 'POST',
+        headers: {
+          'x-auth-token': token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_code })
+      });
+      const batchesData = await batchesResponse.json();
+      setBatches(batchesData);
+      
+    } catch (error) {
+      showMsg('Ошибка загрузки данных', 'error');
+      console.error('Error fetching data:', error);
+    }
+  };
+  
+  fetchData();
+}, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -91,98 +91,100 @@ const ShippingTab = () => {
     }));
   };
 
-  const handleReceiveProduct = async (e) => {
-    e.preventDefault();
+// Обработчик приемки товара
+const handleReceiveProduct = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const token = sendSecureRequest(user_code);
+    const response = await fetch(`${API_BASE_URL}receive`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...formData,
+        user_code,
+        quantity: parseInt(formData.quantity)
+      })
+    });
     
-    try {
-      const token = sendSecureRequest(user_code);
-      const response = await fetch(`${API_BASE_URL}receive`, {
-        method: 'POST',
-        headers: {
-          'x-auth-token': token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          user_code,
-          quantity: parseInt(formData.quantity)
-        })
+    const result = await response.json();
+    
+    if (response.ok) {
+      setBatches(prev => [...prev, result.batch]);
+      setProducts(prev => prev.map(p => 
+        p.id === formData.productId 
+          ? { ...p, quantity: p.quantity + parseInt(formData.quantity) } 
+          : p
+      ));
+      
+      setFormData({
+        productId: '',
+        quantity: 1,
+        batchNumber: '',
+        serialNumbers: '',
+        supplier: '',
+        invoiceNumber: '',
+        recipient: '',
+        shippingDate: new Date().toISOString().split('T')[0]
       });
       
-      const result = await response.json();
-      
-      if (response.ok) {
-        setBatches(prev => [...prev, result.batch]);
-        setProducts(prev => prev.map(p => 
-          p.id === formData.productId 
-            ? { ...p, quantity: p.quantity + parseInt(formData.quantity) } 
-            : p
-        ));
-        
-        setFormData({
-          productId: '',
-          quantity: 1,
-          batchNumber: '',
-          serialNumbers: '',
-          supplier: '',
-          invoiceNumber: '',
-          recipient: '',
-          shippingDate: new Date().toISOString().split('T')[0]
-        });
-        
-        showMsg('Товар успешно принят на склад!', 'success');
-      } else {
-        throw new Error(result.message || 'Ошибка при приемке товара');
-      }
-    } catch (error) {
-      showMsg(error.message, 'error');
-      console.error('Error receiving product:', error);
+      showMsg('Товар успешно принят на склад!', 'success');
+    } else {
+      throw new Error(result.message || 'Ошибка при приемке товара');
     }
-  };
+  } catch (error) {
+    showMsg(error.message, 'error');
+    console.error('Error receiving product:', error);
+  }
+};
 
-  const handleShipProduct = async (e) => {
-    e.preventDefault();
+// Обработчик отгрузки товара
+const handleShipProduct = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const token = sendSecureRequest(user_code);
+    const response = await fetch(`${API_BASE_URL}ship`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...formData,
+        user_code,
+        quantity: parseInt(formData.quantity)
+      })
+    });
     
-    try {
-      const token = sendSecureRequest(user_code);
-      const response = await fetch(`${API_BASE_URL}ship`, {
-        method: 'POST',
-        headers: {
-          'x-auth-token': token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          user_code,
-          quantity: parseInt(formData.quantity)
-        })
-      });
+    const result = await response.json();
+    
+    if (response.ok) {
+      setProducts(prev => prev.map(p => 
+        p.id === formData.productId 
+          ? { ...p, quantity: p.quantity - parseInt(formData.quantity) } 
+          : p
+      ));
       
-      const result = await response.json();
+      setFormData(prev => ({
+        ...prev,
+        productId: '',
+        quantity: 1,
+        recipient: ''
+      }));
       
-      if (response.ok) {
-        setProducts(prev => prev.map(p => 
-          p.id === formData.productId 
-            ? { ...p, quantity: p.quantity - parseInt(formData.quantity) } 
-            : p
-        ));
-        
-        setFormData(prev => ({
-          ...prev,
-          productId: '',
-          quantity: 1,
-          recipient: ''
-        }));
-        
-        showMsg(`Товар успешно отгружен для ${formData.recipient}!`, 'success');
-      } else {
-        throw new Error(result.message || 'Ошибка при отгрузке товара');
-      }
-    } catch (error) {
-      showMsg(error.message, 'error');
-      console.error('Error shipping product:', error);
+      showMsg(`Товар успешно отгружен для ${formData.recipient}!`, 'success');
+    } else {
+      throw new Error(result.message || 'Ошибка при отгрузке товара');
     }
-  };
+  } catch (error) {
+    showMsg(error.message, 'error');
+    console.error('Error shipping product:', error);
+  }
+};
 
   const filteredBatches = batches.filter(batch => {
     const product = products.find(p => p.id === batch.product_id);

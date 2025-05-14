@@ -13,6 +13,7 @@ router.post('/products', validateAuthToken, async (req, res) => {
       FROM wh_products p
       JOIN wh_categories c ON p.category_id = c.id
     `);
+    
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -41,6 +42,7 @@ router.post('/batches', validateAuthToken, async (req, res) => {
       FROM wh_batches b
       JOIN wh_products p ON b.product_id = p.id
     `);
+    
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching batches:', error);
