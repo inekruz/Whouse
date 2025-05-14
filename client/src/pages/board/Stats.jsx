@@ -74,8 +74,8 @@ const Stats = () => {
                 <div key={product.product_id} className="stats-table-row">
                   <span>{product.name}</span>
                   <span>{product.quantity}</span>
-                  <span>{product.price.toFixed(2)}</span>
-                  <span>{(product.quantity * product.price).toFixed(2)}</span>
+                  <span>{Number(product.price).toFixed(2)}</span>
+                  <span>{(Number(product.quantity) * Number(product.price)).toFixed(2)}</span>
                 </div>
               ))}
             </div>

@@ -1,25 +1,14 @@
 const cron = require('node-cron');
 const WarehouseMathService = require('./routes/middleware/warehouseMathService');
 
-// Обновляем модели каждую минуту
-cron.schedule('* * * * *', async () => {
+// Обновляем модели каждую ночь в 2:00
+cron.schedule('0 2 * * *', async () => {
     console.log('Running scheduled models update...');
     try {
         const result = await WarehouseMathService.updateAllModels();
-        
-        if (result.success) {
-            console.log('Success:', result.message);
-        } else {
-            console.error('Partial failure:', result.message);
-            if (result.error) {
-                console.error('Error details:', result.error);
-            }
-        }
+        console.log('Scheduled update result:', result.message);
     } catch (error) {
-        console.error('Critical error in scheduled update:', {
-            message: error.message,
-            stack: error.stack
-        });
+        console.error('Error in scheduled update:', error);
     }
 });
 
