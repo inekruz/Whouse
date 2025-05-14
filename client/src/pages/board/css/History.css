@@ -1,0 +1,81 @@
+/* История работы */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-item {
+  background-color: var(--secondary-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.history-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.username {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.timestamp {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.toggle-description {
+  background: none;
+  border: none;
+  color: var(--link-color);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.toggle-description:hover {
+  background-color: var(--ternary-color);
+}
+
+.history-description {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: var(--ternary-color);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error-message {
+  color: var(--danger-color);
+}
+
+/* Адаптация для светлой темы */
+[data-theme="light"] .history-item {
+  background-color: var(--secondary-color);
+}
+
+[data-theme="light"] .history-description {
+  background-color: var(--ternary-color);
+}
