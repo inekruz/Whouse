@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./scheduler');
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -9,6 +10,7 @@ const AdmUsers = require('./routes/admUsers');
 const Product = require('./routes/products');
 const Shipping = require('./routes/shipping');
 const Inventory = require('./routes/inventory');
+const warehouseAnalytics = require('./routes/warehouseAnalytics');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +28,7 @@ app.use('/users', AdmUsers);
 app.use('/prd', Product);
 app.use('/shp', Shipping);
 app.use('/inv', Inventory);
+app.use('/math/analytics', warehouseAnalytics);
 
 const startServer = () => {
   server.listen(config.port, () => {
