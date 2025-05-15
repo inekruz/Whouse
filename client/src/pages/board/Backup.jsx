@@ -10,33 +10,34 @@ const Backup = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchTables = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('https://api.whous.ru/bcp/get', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token
-        },
-        body: JSON.stringify({ adminCode })
-      });
+const fetchTables = useCallback(async () => {
+  try {
+    setLoading(true);
+    const token = sendSecureRequest(adminCode);
+    const response = await fetch('https://api.whous.ru/bcp/get', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token
+      },
+      body: JSON.stringify({ adminCode })
+    });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch tables');
-      }
-
-      setTables(data.tables || []);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching tables:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch tables');
     }
-  }, [token, adminCode]); 
+
+    setTables(data.tables || []);
+    setError(null);
+  } catch (err) {
+    console.error('Error fetching tables:', err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}, [adminCode]);
 
   useEffect(() => {
     fetchTables();
