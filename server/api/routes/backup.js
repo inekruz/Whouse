@@ -33,7 +33,7 @@ router.post('/backup', validateAuthToken, async (req, res) => {
     });
 
     // Устанавливаем заголовки для скачивания файла
-    res.setHeader('Content-Type', 'text/csv; application/json; charset=utf-8');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename=${tableName}_backup.csv`);
     
     // Отправляем CSV
