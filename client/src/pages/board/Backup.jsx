@@ -10,8 +10,7 @@ const Backup = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-useEffect(() => {
-  const fetchTables = async () => {
+  const fetchTables = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('https://api.whous.ru/bcp/get', {
@@ -37,10 +36,11 @@ useEffect(() => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, adminCode]); 
 
-  fetchTables();
-}, [token, adminCode]);
+  useEffect(() => {
+    fetchTables();
+  }, [fetchTables]);
 
   const downloadTable = async (tableName) => {
     try {
