@@ -10,10 +10,7 @@ const Backup = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchTables();
-  }, []);
-
+useEffect(() => {
   const fetchTables = async () => {
     try {
       setLoading(true);
@@ -41,6 +38,9 @@ const Backup = () => {
       setLoading(false);
     }
   };
+
+  fetchTables();
+}, [token, adminCode]);
 
   const downloadTable = async (tableName) => {
     try {
