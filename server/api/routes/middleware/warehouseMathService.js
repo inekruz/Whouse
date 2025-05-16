@@ -100,12 +100,13 @@ class WarehouseMathService {
             const leadTimeStats = await db.query(`
                 SELECT 
                     product_id,
-                    AVG(EXTRACT(DAY FROM (received_date - ordered_date))) as avg_lead_time,
-                    MAX(EXTRACT(DAY FROM (received_date - ordered_date))) as max_lead_time,
-                    STDDEV(EXTRACT(DAY FROM (received_date - ordered_date))) as lead_time_stddev
+                    AVG(received_date - ordered_date) as avg_lead_time,
+                    MAX(received_date - ordered_date) as max_lead_time,
+                    STDDEV(received_date - ordered_date) as lead_time_stddev
                 FROM wh_purchase_orders
                 WHERE received_date IS NOT NULL
                 GROUP BY product_id
+
             `);
             
             // Получаем данные о стоимости заказа и хранения
