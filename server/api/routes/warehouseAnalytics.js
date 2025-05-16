@@ -242,12 +242,12 @@ router.post('/full-kpi/:productId', validateAuthToken, async (req, res) => {
         `, [productId]);
         
         const leadTimeStats = await db.query(`
-            SELECT 
-                AVG(EXTRACT(DAY FROM (received_date - ordered_date))) as avg_lead_time,
-                STDDEV(EXTRACT(DAY FROM (received_date - ordered_date))) as lead_time_stddev
-            FROM wh_purchase_orders
-            WHERE product_id = $1
-            AND received_date IS NOT NULL
+          SELECT 
+              AVG((received_date - ordered_date))::INTEGER AS avg_lead_time,
+              STDDEV((received_date - ordered_date))::INTEGER AS lead_time_stddev
+          FROM wh_purchase_orders
+          WHERE product_id = $1
+          AND received_date IS NOT NULL
         `, [productId]);
         
         // Рассчитываем оборачиваемость
