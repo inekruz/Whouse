@@ -172,25 +172,25 @@ const Stats = () => {
           <div className="kpi-card">
             <FiPackage className="kpi-icon" />
             <h4>Точка заказа</h4>
-            <p>{kpi.reorder_point?.toFixed(2) || 'Н/Д'}</p>
+            <p>{Number(kpi.reorder_point)?.toFixed(2) || 'Н/Д'}</p>
           </div>
           
           <div className="kpi-card">
             <FiClipboard className="kpi-icon" />
             <h4>Страховой запас</h4>
-            <p>{kpi.safety_stock?.toFixed(2) || 'Н/Д'}</p>
+            <p>{Number(kpi.safety_stock)?.toFixed(2) || 'Н/Д'}</p>
           </div>
           
           <div className="kpi-card">
             <FiTrendingUp className="kpi-icon" />
             <h4>Оборачиваемость</h4>
-            <p>{kpi.turnover_rate?.toFixed(2) || kpi.calculatedTurnoverRate?.toFixed(2) || 'Н/Д'}</p>
+            <p>{Number(kpi.turnover_rate)?.toFixed(2) || Number(kpi.calculatedTurnoverRate)?.toFixed(2) || 'Н/Д'}</p>
           </div>
           
           <div className="kpi-card">
             <FiTruck className="kpi-icon" />
             <h4>EOQ (Оптимальный заказ)</h4>
-            <p>{kpi.eoq?.toFixed(2) || 'Н/Д'}</p>
+            <p>{Number(kpi.eoq)?.toFixed(2) || 'Н/Д'}</p>
           </div>
         </div>
         
@@ -198,11 +198,11 @@ const Stats = () => {
           <h4>Детали расчета:</h4>
           <div className="detail-row">
             <span>Средний дневной спрос:</span>
-            <span>{kpi.demandStats?.avg_daily_demand?.toFixed(2) || 'Н/Д'}</span>
+            <span>{Number(kpi.demandStats?.avg_daily_demand)?.toFixed(2) || 'Н/Д'}</span>
           </div>
           <div className="detail-row">
             <span>Среднее время поставки (дни):</span>
-            <span>{kpi.leadTimeStats?.avg_lead_time?.toFixed(1) || 'Н/Д'}</span>
+            <span>{Number(kpi.leadTimeStats?.avg_lead_time)?.toFixed(1) || 'Н/Д'}</span>
           </div>
         </div>
       </div>
