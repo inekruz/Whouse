@@ -67,7 +67,6 @@ router.delete('/delete/:id', validateAuthToken, async (req, res) => {
     await db.query('BEGIN');
 
     await db.query('DELETE FROM wh_abc_analysis WHERE product_id = $1', [id]);
-    await db.query('DELETE FROM wh_shipments_product_id_fkey WHERE product_id = $1', [id]);
 
     const result = await db.query('DELETE FROM wh_products WHERE id = $1', [id]);
 
