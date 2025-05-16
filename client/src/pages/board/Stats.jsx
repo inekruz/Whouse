@@ -46,11 +46,9 @@ const Stats = () => {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      // Load products list first
       const productsData = await fetchData('products');
       if (productsData) setProducts(productsData.rows);
       
-      // Load other data
       const abcData = await fetchData('abc-analysis');
       if (abcData) setAbcAnalysis(abcData);
       
@@ -83,7 +81,7 @@ const Stats = () => {
     
     return (
       <div className="stats-grid">
-        {['A', 'B', 'C'].map(category => (
+        {['A', 'B', 'C']?.map(category => (
           <div key={category} className="stats-category">
             <h3 style={{ color: `var(--${category === 'A' ? 'danger' : category === 'B' ? 'warning' : 'success'}-color)` }}>
               Категория {category}
@@ -155,7 +153,7 @@ const Stats = () => {
             value={selectedProduct}
           >
             <option value="">-- Выберите товар --</option>
-            {products.map(product => (
+            {products?.map(product => (
               <option key={product.id} value={product.id}>{product.name}</option>
             ))}
           </select>
@@ -242,7 +240,7 @@ const Stats = () => {
                   <span>Кол-во товаров</span>
                   <span>Уникальных товаров</span>
                 </div>
-                {locationStats.source.map(loc => (
+                {locationStats.source?.map(loc => (
                   <div key={loc.location} className="location-row">
                     <span>{loc.location}</span>
                     <span>{loc.transfer_count}</span>
