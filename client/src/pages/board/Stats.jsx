@@ -1,4 +1,4 @@
-import { FiBarChart2 } from 'react-icons/fi';
+import { FiBarChart2, FiPackage, FiTruck, FiTrendingUp, FiClipboard, FiMapPin } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { sendSecureRequest } from '../../components/SecureToken';
 import './css/Stats.css';
@@ -8,9 +8,13 @@ const Stats = () => {
   const [error, setError] = useState(null);
   const [abcAnalysis, setAbcAnalysis] = useState(null);
   const [transferStats, setTransferStats] = useState(null);
+  const [productKPIs, setProductKPIs] = useState({});
+  const [locationStats, setLocationStats] = useState({ source: [], destination: [] });
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const [products, setProducts] = useState([]);
   const [activeTab, setActiveTab] = useState('abc');
 
-  const fetchData = async (endpoint) => {
+  const fetchData = async (endpoint, body = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -24,15 +28,14 @@ const Stats = () => {
           'x-auth-token': token,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ adminCode })
+        body: JSON.stringify({ adminCode, ...body })
       });
       
       if (!response.ok) {
         throw new Error(`Ошибка запроса: ${response.status}`);
       }
       
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (err) {
       setError(err.message);
       return null;
@@ -42,16 +45,38 @@ const Stats = () => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadInitialData = async () => {
+      // Load products list first
+      const productsData = await fetchData('products');
+      if (productsData) setProducts(productsData.rows);
+      
+      // Load other data
       const abcData = await fetchData('abc-analysis');
       if (abcData) setAbcAnalysis(abcData);
       
       const transferData = await fetchData('transfer-stats');
       if (transferData) setTransferStats(transferData);
+      
+      const sourceLocations = await fetchData('source-location-stats');
+      const destLocations = await fetchData('destination-location-stats');
+      
+      if (sourceLocations) setLocationStats(prev => ({ ...prev, source: sourceLocations }));
+      if (destLocations) setLocationStats(prev => ({ ...prev, destination: destLocations }));
     };
     
-    loadData();
+    loadInitialData();
   }, []);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      const loadProductKPIs = async () => {
+        const kpiData = await fetchData(`full-kpi/${selectedProduct}`);
+        if (kpiData) setProductKPIs(prev => ({ ...prev, [selectedProduct]: kpiData }));
+      };
+      
+      loadProductKPIs();
+    }
+  }, [selectedProduct]);
 
   const renderAbcAnalysis = () => {
     if (!abcAnalysis) return null;
@@ -85,40 +110,192 @@ const Stats = () => {
     );
   };
 
-const renderTransferStats = () => {
-  if (!transferStats) return <p>Данные о перемещениях не загружены</p>;
-  
-  return (
-    <div className="transfer-stats">
-      <h3>Анализ перемещений (90 дней)</h3>
-      {transferStats.totalTransfers === 0 ? (
-        <p>Нет данных о перемещениях за последние 90 дней</p>
-      ) : (
-        <div className="transfer-grid">
-          <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
-            <h4>Всего перемещений</h4>
-            <p style={{ color: 'var(--link-color)', fontSize: '1.5rem' }}>
-              {transferStats.totalTransfers || 0}
-            </p>
+  const renderTransferStats = () => {
+    if (!transferStats) return <p>Данные о перемещениях не загружены</p>;
+    
+    return (
+      <div className="transfer-stats">
+        <h3>Анализ перемещений (90 дней)</h3>
+        {transferStats.totalTransfers === 0 ? (
+          <p>Нет данных о перемещениях за последние 90 дней</p>
+        ) : (
+          <div className="transfer-grid">
+            <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
+              <h4>Всего перемещений</h4>
+              <p style={{ color: 'var(--link-color)', fontSize: '1.5rem' }}>
+                {transferStats.totalTransfers || 0}
+              </p>
+            </div>
+            <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
+              <h4>Среднее в день</h4>
+              <p style={{ color: 'var(--success-color)', fontSize: '1.5rem' }}>
+                {(transferStats.avgPerDay || 0).toFixed(1)}
+              </p>
+            </div>
+            <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
+              <h4>Самый активный товар</h4>
+              <p style={{ color: 'var(--warning-color)', fontSize: '1.2rem' }}>
+                {transferStats.mostActiveProduct?.name || 'Нет данных'}
+              </p>
+              <p>Перемещений: {transferStats.mostActiveProduct?.count || 0}</p>
+            </div>
           </div>
-          <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
-            <h4>Среднее в день</h4>
-            <p style={{ color: 'var(--success-color)', fontSize: '1.5rem' }}>
-              {(transferStats.avgPerDay || 0).toFixed(1)}
-            </p>
+        )}
+      </div>
+    );
+  };
+
+  const renderInventoryKPIs = () => {
+    if (!selectedProduct) {
+      return (
+        <div className="product-selector">
+          <h3>Выберите товар для анализа</h3>
+          <select 
+            onChange={(e) => setSelectedProduct(e.target.value)}
+            value={selectedProduct}
+          >
+            <option value="">-- Выберите товар --</option>
+            {products.map(product => (
+              <option key={product.id} value={product.id}>{product.name}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    const kpi = productKPIs[selectedProduct];
+    if (!kpi) return <p>Загрузка данных по товару...</p>;
+
+    return (
+      <div className="kpi-container">
+        <h3>Ключевые показатели товара</h3>
+        
+        <div className="kpi-grid">
+          <div className="kpi-card">
+            <FiPackage className="kpi-icon" />
+            <h4>Точка заказа</h4>
+            <p>{kpi.reorder_point?.toFixed(2) || 'Н/Д'}</p>
           </div>
-          <div className="transfer-card" style={{ backgroundColor: 'var(--secondary-color)' }}>
-            <h4>Самый активный товар</h4>
-            <p style={{ color: 'var(--warning-color)', fontSize: '1.2rem' }}>
-              {transferStats.mostActiveProduct?.name || 'Нет данных'}
-            </p>
-            <p>Перемещений: {transferStats.mostActiveProduct?.count || 0}</p>
+          
+          <div className="kpi-card">
+            <FiClipboard className="kpi-icon" />
+            <h4>Страховой запас</h4>
+            <p>{kpi.safety_stock?.toFixed(2) || 'Н/Д'}</p>
+          </div>
+          
+          <div className="kpi-card">
+            <FiTrendingUp className="kpi-icon" />
+            <h4>Оборачиваемость</h4>
+            <p>{kpi.turnover_rate?.toFixed(2) || kpi.calculatedTurnoverRate?.toFixed(2) || 'Н/Д'}</p>
+          </div>
+          
+          <div className="kpi-card">
+            <FiTruck className="kpi-icon" />
+            <h4>EOQ (Оптимальный заказ)</h4>
+            <p>{kpi.eoq?.toFixed(2) || 'Н/Д'}</p>
           </div>
         </div>
-      )}
-    </div>
-  );
-};
+        
+        <div className="kpi-details">
+          <h4>Детали расчета:</h4>
+          <div className="detail-row">
+            <span>Средний дневной спрос:</span>
+            <span>{kpi.demandStats?.avg_daily_demand?.toFixed(2) || 'Н/Д'}</span>
+          </div>
+          <div className="detail-row">
+            <span>Среднее время поставки (дни):</span>
+            <span>{kpi.leadTimeStats?.avg_lead_time?.toFixed(1) || 'Н/Д'}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLocationStats = () => {
+    return (
+      <div className="location-stats">
+        <div className="location-tabs">
+          <button 
+            className={`tab-button ${activeTab === 'source-locations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('source-locations')}
+          >
+            <FiMapPin /> Откуда
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'dest-locations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dest-locations')}
+          >
+            <FiMapPin /> Куда
+          </button>
+        </div>
+        
+        {activeTab === 'source-locations' ? (
+          <div className="location-data">
+            <h3>Статистика по источникам</h3>
+            {locationStats.source.length === 0 ? (
+              <p>Нет данных о перемещениях</p>
+            ) : (
+              <div className="location-table">
+                <div className="location-header">
+                  <span>Локация</span>
+                  <span>Перемещений</span>
+                  <span>Кол-во товаров</span>
+                  <span>Уникальных товаров</span>
+                </div>
+                {locationStats.source.map(loc => (
+                  <div key={loc.location} className="location-row">
+                    <span>{loc.location}</span>
+                    <span>{loc.transfer_count}</span>
+                    <span>{loc.total_quantity}</span>
+                    <span>{loc.unique_products}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="location-data">
+            <h3>Статистика по назначениям</h3>
+            {locationStats.destination.length === 0 ? (
+              <p>Нет данных о перемещениях</p>
+            ) : (
+              <div className="location-table">
+                <div className="location-header">
+                  <span>Локация</span>
+                  <span>Перемещений</span>
+                  <span>Кол-во товаров</span>
+                  <span>Уникальных товаров</span>
+                </div>
+                {locationStats.destination.map(loc => (
+                  <div key={loc.location} className="location-row">
+                    <span>{loc.location}</span>
+                    <span>{loc.transfer_count}</span>
+                    <span>{loc.total_quantity}</span>
+                    <span>{loc.unique_products}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'abc':
+        return renderAbcAnalysis();
+      case 'transfers':
+        return renderTransferStats();
+      case 'kpi':
+        return renderInventoryKPIs();
+      case 'locations':
+        return renderLocationStats();
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="tab-content">
@@ -135,24 +312,30 @@ const renderTransferStats = () => {
           <button 
             className={`tab-button ${activeTab === 'abc' ? 'active' : ''}`}
             onClick={() => setActiveTab('abc')}
-            style={{
-              backgroundColor: activeTab === 'abc' ? 'var(--button-color)' : 'var(--quaternary-color)'
-            }}
           >
-            ABC-анализ
+            <FiBarChart2 /> ABC-анализ
           </button>
           <button 
             className={`tab-button ${activeTab === 'transfers' ? 'active' : ''}`}
             onClick={() => setActiveTab('transfers')}
-            style={{
-              backgroundColor: activeTab === 'transfers' ? 'var(--button-color)' : 'var(--quaternary-color)'
-            }}
           >
-            Перемещения
+            <FiTruck /> Перемещения
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'kpi' ? 'active' : ''}`}
+            onClick={() => setActiveTab('kpi')}
+          >
+            <FiTrendingUp /> KPI товаров
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'locations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('locations')}
+          >
+            <FiMapPin /> Локации
           </button>
         </div>
         
-        {activeTab === 'abc' ? renderAbcAnalysis() : renderTransferStats()}
+        {renderTabContent()}
       </div>
     </div>
   );
