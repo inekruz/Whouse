@@ -101,7 +101,6 @@ router.post('/ship', validateAuthToken, async (req, res) => {
   try {
     await db.query('BEGIN');
     
-    // 1. Проверяем наличие товара
     const product = await db.query(
       'SELECT quantity FROM wh_products WHERE id = $1',
       [productId]
@@ -114,7 +113,52 @@ router.post('/ship', validateAuthToken, async (req, res) => {
       });
     }
     
-    // 2. Обновляем количество товара
+    const batches = await db.query(
+      `SELECT id, quantity FROM wh_batches 
+       WHERE product_id = $1 AND quantity > 0
+       ORDER BY received_date ASC`,
+      [productId]
+    );
+    
+    if (batches.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Нет доступных партий товара для отгрузки'
+      });
+    }
+    
+    let remainingQuantity = quantity;
+    
+    for (const batch of batches.rows) {
+      if (remainingQuantity <= 0) break;
+      
+      const batchQuantity = batch.quantity;
+      const newQuantity = Math.max(0, batchQuantity - remainingQuantity);
+      remainingQuantity -= batchQuantity;
+      
+      if (newQuantity > 0) {
+        await db.query(
+          `UPDATE wh_batches 
+           SET quantity = $1 
+           WHERE id = $2`,
+          [newQuantity, batch.id]
+        );
+      } else {
+        await db.query(
+          'DELETE FROM wh_batches WHERE id = $1',
+          [batch.id]
+        );
+      }
+    }
+    
+    if (remainingQuantity > 0) {
+      await db.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: 'Недостаточно товара в партиях для отгрузки'
+      });
+    }
+    
     await db.query(
       `UPDATE wh_products 
        SET quantity = quantity - $1 
@@ -122,23 +166,13 @@ router.post('/ship', validateAuthToken, async (req, res) => {
       [quantity, productId]
     );
     
-    // 3. Добавляем запись об отгрузке
-    const shipmentResult = await db.query(
-      `INSERT INTO wh_shipments 
-       (product_id, quantity, recipient, shipping_date, user_code)
-       VALUES ($1, $2, $3, CURRENT_DATE, $4)
-       RETURNING *`,
-      [productId, quantity, recipient, user_code]
-    );
-    
-    // 4. Логируем действие
     await logAction(user_code, `Отгрузка товара ID: ${productId}, количество: ${quantity}, получатель: ${recipient}`);
     
     await db.query('COMMIT');
     
     res.json({
       success: true,
-      shipment: shipmentResult.rows[0]
+      message: 'Товар успешно отгружен'
     });
     
   } catch (error) {
