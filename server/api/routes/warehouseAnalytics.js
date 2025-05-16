@@ -89,7 +89,7 @@ router.post('/transfer-stats', validateAuthToken, async (req, res) => {
         SELECT t.product_id, p.name as product_name, 
                 t.from_location as "from", t.to_location as "to", 
                 t.transfer_date as date,
-        FROM wh_transfers t
+        FROM wh_transfers as t
         LEFT JOIN wh_products p ON t.product_id = p.id
         WHERE t.transfer_date > CURRENT_DATE - INTERVAL '90 days'
         `);
