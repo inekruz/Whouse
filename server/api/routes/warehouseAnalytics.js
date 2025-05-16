@@ -4,6 +4,16 @@ const db = require('../../db');
 const validateAuthToken = require('./middleware/validateAuthTokenAdmin');
 const WarehouseMathService = require('./middleware/warehouseMathService');
 
+router.post('/products', validateAuthToken, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM wh_products ORDER BY id DESC');
+    res.json({ products: result.rows });
+  } catch (err) {
+    console.error('Ошибка при получении товаров:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 // Обновление всех моделей (можно вызывать по расписанию или вручную)
 router.post('/update-models', validateAuthToken, async (req, res) => {
     try {
