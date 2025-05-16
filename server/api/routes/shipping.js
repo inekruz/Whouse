@@ -159,12 +159,29 @@ router.post('/ship', validateAuthToken, async (req, res) => {
       });
     }
     
-    await db.query(
+    const updateResult = await db.query(
       `UPDATE wh_products 
        SET quantity = quantity - $1 
-       WHERE id = $2`,
+       WHERE id = $2
+       RETURNING quantity`,
       [quantity, productId]
     );
+    
+    const newQuantity = updateResult.rows[0].quantity;
+    
+    if (newQuantity <= 0) {
+      await db.query(
+        'DELETE FROM wh_abc_analysis WHERE product_id = $1',
+        [productId]
+      );
+      
+      await db.query(
+        'DELETE FROM wh_products WHERE id = $1',
+        [productId]
+      );
+      
+      await logAction(user_code, `Автоматически удален товар ID: ${productId} после отгрузки (количество <= 0)`);
+    }
     
     await logAction(user_code, `Отгрузка товара ID: ${productId}, количество: ${quantity}, получатель: ${recipient}`);
     
@@ -172,7 +189,8 @@ router.post('/ship', validateAuthToken, async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Товар успешно отгружен'
+      message: 'Товар успешно отгружен',
+      productDeleted: newQuantity <= 0
     });
     
   } catch (error) {
@@ -180,7 +198,8 @@ router.post('/ship', validateAuthToken, async (req, res) => {
     console.error('Error shipping product:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Ошибка при отгрузке товара' 
+      message: 'Ошибка при отгрузке товара',
+      details: error.detail 
     });
   }
 });
