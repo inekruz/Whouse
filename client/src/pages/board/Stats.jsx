@@ -172,7 +172,7 @@ const Stats = () => {
           <div className="kpi-card">
             <FiPackage className="kpi-icon" />
             <h4>Точка заказа</h4>
-            <p>{Number(kpi.reorder_point)?.toFixed(2) || 'Н/Д'}</p>
+            <p>{isFinite(kpi.reorder_point) ? Number(kpi.reorder_point).toFixed(2) : 'Н/Д'}</p>
           </div>
           
           <div className="kpi-card">
