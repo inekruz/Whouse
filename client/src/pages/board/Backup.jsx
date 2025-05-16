@@ -55,7 +55,7 @@ const WarehouseAnalytics = () => {
           endpoint = '/update-models';
       }
 
-      const response = await fetch(`https://api.whous.ru/warehouse${endpoint}`, {
+      const response = await fetch(`https://api.whous.ru/shp${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ const WarehouseAnalytics = () => {
   const updateAllModels = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://api.whous.ru/warehouse/update-models', {
+      const response = await fetch('https://api.whous.ru/shp/update-models', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
