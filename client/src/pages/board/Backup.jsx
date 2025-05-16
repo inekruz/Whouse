@@ -1,4 +1,4 @@
-import { FiDatabase, FiDownload, FiTrendingUp, FiBox, FiMapPin, FiRefreshCw } from 'react-icons/fi';
+import { FiDatabase, FiTrendingUp, FiBox, FiMapPin, FiRefreshCw } from 'react-icons/fi';
 import { sendSecureRequest } from '../../components/SecureToken';
 import { useState, useEffect, useCallback } from 'react';
 import './css/Backup.css';
