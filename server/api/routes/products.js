@@ -64,16 +64,28 @@ router.delete('/delete/:id', validateAuthToken, async (req, res) => {
   const { user_code } = req.body;
 
   try {
+    await db.query('BEGIN');
+
+    await db.query('DELETE FROM wh_abc_analysis WHERE product_id = $1', [id]);
+
     const result = await db.query('DELETE FROM wh_products WHERE id = $1', [id]);
 
     if (result.rowCount === 0) {
+      await db.query('ROLLBACK');
       return res.status(404).json({ error: 'Товар не найден' });
     }
+
+    await db.query('COMMIT');
+    
     await logAction(user_code, `Удалил товар: ${id}`);
     res.status(200).json({ message: 'Товар успешно удалён' });
   } catch (err) {
+    await db.query('ROLLBACK');
     console.error('Ошибка при удалении товара:', err);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    res.status(500).json({ 
+      error: 'Ошибка сервера',
+      details: err.detail
+    });
   }
 });
 
