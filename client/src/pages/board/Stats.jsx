@@ -95,7 +95,7 @@ const Stats = () => {
                 <span>Цена</span>
                 <span>Стоимость</span>
               </div>
-              {abcAnalysis[category].map(product => (
+              {abcAnalysis[category]?.map(product => (
                 <div key={product.product_id} className="stats-table-row">
                   <span>{product.name}</span>
                   <span>{product.quantity}</span>
