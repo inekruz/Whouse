@@ -47,7 +47,7 @@ const Stats = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       const productsData = await fetchData('products');
-      if (productsData) setProducts(productsData.rows);
+      if (productsData) setProducts(productsData.products);
       
       const abcData = await fetchData('abc-analysis');
       if (abcData) setAbcAnalysis(abcData);
